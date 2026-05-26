@@ -1,0 +1,12 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pagecut-app
+    ports:
+      - "3089:3089"
+    environment:
+      - NODE_ENV=production
+      - PORT=3089
+    restart: unless-stopped

@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+build
+.git
+.gitignore
+.dockerignore
+Dockerfile
+README.md
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.gemini
+AGENTS.md
+biome.json
+*.md

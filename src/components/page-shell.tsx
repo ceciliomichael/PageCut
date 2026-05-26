@@ -22,7 +22,7 @@ export function PageShell({ step, children, footer, fullHeight }: PageShellProps
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
-            <span className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">PDF EXTRACTOR</span>
+            <span className="text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">PAGECUT</span>
           </div>
           <StepBar current={step} />
         </div>
