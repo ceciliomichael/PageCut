@@ -1,0 +1,299 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #ffffff;
+  --color-bg: #f4f4f3;
+  --color-bg-subtle: #eeeeec;
+  --color-border: #e2e2df;
+  --color-border-strong: #c8c8c4;
+  --color-text-primary: #1a1a18;
+  --color-text-secondary: #5a5a56;
+  --color-text-muted: #9a9a94;
+  --color-accent: #2d2d2a;
+  --color-accent-hover: #1a1a18;
+  --color-tag-bg: #e8e8e5;
+  --color-tag-text: #3a3a36;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-danger-text: #b91c1c;
+  --color-success-bg: #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-success-text: #15803d;
+
+  --font-sans: "Inter", "system-ui", sans-serif;
+
+  --shadow-card:
+    0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-lifted:
+    0 4px 12px 0 rgb(0 0 0 / 0.06), 0 2px 4px -1px rgb(0 0 0 / 0.04);
+}
+
+@layer base {
+  html {
+    background: var(--color-bg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 99px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+}
+
+@layer utilities {
+  .step-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    background: var(--color-accent);
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.625rem;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.15);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1.25rem;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.625rem;
+    border: 1px solid var(--color-border);
+    transition: all 0.15s ease;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--color-bg-subtle);
+    border-color: var(--color-border-strong);
+  }
+
+  .btn-secondary:active:not(:disabled) {
+    background: var(--color-bg);
+  }
+
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-height: 36px;
+    padding: 0 0.875rem;
+    background: transparent;
+    color: var(--color-danger-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-danger-border);
+    transition: all 0.15s ease;
+  }
+
+  .btn-danger:hover {
+    background: var(--color-danger-bg);
+  }
+
+  .input-field {
+    width: 100%;
+    height: 44px;
+    padding: 0 0.875rem;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+    outline: none;
+  }
+
+  .input-field::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .input-field:focus {
+    border-color: var(--color-border-strong);
+    box-shadow: 0 0 0 3px rgb(0 0 0 / 0.05);
+  }
+
+  .tag-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background: var(--color-tag-bg);
+    color: var(--color-tag-text);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 99px;
+    letter-spacing: 0.01em;
+  }
+
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+
+  .progress-step.active {
+    color: var(--color-text-primary);
+  }
+
+  .progress-step.done {
+    color: var(--color-text-secondary);
+  }
+
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--color-bg-subtle);
+    border: 1.5px solid var(--color-border);
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .step-dot.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #ffffff;
+  }
+
+  .step-dot.done {
+    background: var(--color-bg-subtle);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-secondary);
+  }
+
+  .step-connector {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+    max-width: 48px;
+  }
+
+  .step-connector.done {
+    background: var(--color-border-strong);
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.35s ease both;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.25s ease both;
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.25s ease both;
+  }
+
+  .animate-spin-slow {
+    animation: spin 1s linear infinite;
+  }
+}
