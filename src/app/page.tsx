@@ -1,10 +1,17 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Scissors, GitMerge, ArrowRight } from "lucide-react";
+import { clearSession, clearMergeSession } from "@/lib/pdf-session";
 
 export default function HomePage() {
   const router = useRouter();
+
+  useEffect(() => {
+    clearSession();
+    clearMergeSession();
+  }, []);
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 md:px-6 lg:px-8" style={{ background: "var(--color-bg)" }}>
