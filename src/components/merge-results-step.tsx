@@ -250,10 +250,10 @@ export default function MergeResultsStep() {
 
         {/* Done */}
         {state.kind === "done" && (
-          <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 pb-36 space-y-4">
+          <div className="flex-1 flex flex-col w-full max-w-2xl mx-auto px-3 overflow-hidden space-y-4 mb-44 sm:mb-28">
             {/* Success banner */}
             <div
-              className="flex items-center gap-3 rounded-xl px-4 py-3 animate-fade-in"
+              className="flex items-center gap-3 rounded-xl px-4 py-3 animate-fade-in shrink-0"
               style={{
                 background: "var(--color-success-bg)",
                 border: "1px solid var(--color-success-border)",
@@ -270,7 +270,7 @@ export default function MergeResultsStep() {
 
             {/* Merged file card */}
             <div
-              className="flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between animate-slide-in"
+              className="flex flex-col gap-4 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between animate-slide-in shrink-0"
               style={{
                 background: "var(--color-surface)",
                 border: "1px solid var(--color-border)",
@@ -308,14 +308,14 @@ export default function MergeResultsStep() {
             </div>
 
             {/* Per-file contribution breakdown */}
-            <div>
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               <p
-                className="mb-2 text-xs font-semibold uppercase tracking-wider"
+                className="mb-2 text-xs font-semibold uppercase tracking-wider shrink-0"
                 style={{ color: "var(--color-text-muted)" }}
               >
                 Contribution breakdown
               </p>
-              <div className="space-y-2">
+              <div className="flex-1 overflow-y-auto space-y-2 pb-2 scrollbar-thin">
                 {state.result.contributions.map((c, i) => (
                   <div
                     key={`${c.fileName}-${i}`}

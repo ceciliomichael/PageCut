@@ -243,7 +243,7 @@ export default function MergeConfigureStep() {
         </div>
 
         {/* Scrollable file list */}
-        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-28 pb-2 scrollbar-thin space-y-3">
+        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-44 sm:mb-28 pb-2 scrollbar-thin space-y-3">
           {items.map((item, index) => (
             <FileConfigCard
               key={item.id}
