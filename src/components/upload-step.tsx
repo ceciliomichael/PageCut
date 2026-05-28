@@ -87,7 +87,7 @@ export default function UploadPage() {
   function handleContinue() {
     if (state.kind !== "ready") return;
     setSession({ file: state.file, totalPages: state.totalPages, ranges: [] });
-    router.push("/configure");
+    router.push("/split/configure");
   }
 
   const isDragging = state.kind === "dragging";
@@ -96,9 +96,60 @@ export default function UploadPage() {
   const isError = state.kind === "error";
 
   return (
-    <PageShell step={0}>
-      <div className="space-y-6 flex flex-col items-center text-center">
-        <div className="space-y-2">
+    <PageShell
+      step={0}
+      fullHeight={isReady}
+      footer={
+        isReady ? (
+          <div className="fixed bottom-0 left-0 right-0 flex justify-center px-4 md:px-6 lg:px-8 bg-[var(--color-bg)] border-t border-[var(--color-border)] z-30">
+            <div className="w-full max-w-2xl py-4 space-y-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="btn-secondary"
+                  id="btn-clear-file"
+                >
+                  <X size={15} />
+                  Remove file
+                </button>
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  className="btn-primary sm:ml-auto"
+                  id="btn-continue-to-configure"
+                >
+                  Continue
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M2.5 7h9M8 3.5L11.5 7 8 10.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <p
+                className="text-xs text-center"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                Your file never leaves your device. All processing happens locally.
+              </p>
+            </div>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className={`w-full space-y-6 ${isReady ? "flex-1 flex flex-col justify-center pb-28" : ""}`}>
+        <div className="space-y-2 text-center shrink-0">
           <h1
             className="text-2xl font-semibold tracking-tight md:text-3xl"
             style={{ color: "var(--color-text-primary)" }}
@@ -129,7 +180,7 @@ export default function UploadPage() {
               if (!isLoading && !isReady) inputRef.current?.click();
             }
           }}
-          className="relative overflow-hidden rounded-2xl transition-all duration-200 w-full max-w-2xl"
+          className="relative overflow-hidden rounded-2xl transition-all duration-200 w-full max-w-2xl mx-auto shrink-0"
           style={{
             background: isDragging
               ? "var(--color-bg-subtle)"
@@ -147,15 +198,15 @@ export default function UploadPage() {
             disabled={isLoading}
           />
 
-          <div className="flex min-h-72 flex-col items-center justify-center gap-5 p-12 text-center">
+          <div className="flex min-h-72 flex-col items-center justify-center gap-4 p-12 text-center">
             {isLoading ? (
               <>
                 <div
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl"
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
                   style={{ background: "var(--color-bg-subtle)" }}
                 >
                   <Loader2
-                    size={24}
+                    size={22}
                     className="animate-spin-slow"
                     style={{ color: "var(--color-text-secondary)" }}
                   />
@@ -170,11 +221,11 @@ export default function UploadPage() {
             ) : isReady && state.kind === "ready" ? (
               <>
                 <div
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl"
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
                   style={{ background: "var(--color-bg-subtle)" }}
                 >
                   <FileText
-                    size={24}
+                    size={22}
                     style={{ color: "var(--color-text-secondary)" }}
                   />
                 </div>
@@ -198,7 +249,7 @@ export default function UploadPage() {
             ) : (
               <>
                 <div
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl transition-colors duration-200"
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl transition-colors duration-200"
                   style={{
                     background: isDragging
                       ? "var(--color-border)"
@@ -206,11 +257,11 @@ export default function UploadPage() {
                   }}
                 >
                   <Upload
-                    size={24}
+                    size={22}
                     style={{ color: "var(--color-text-secondary)" }}
                   />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <p
                     className="text-base font-medium"
                     style={{ color: "var(--color-text-primary)" }}
@@ -230,12 +281,6 @@ export default function UploadPage() {
                     </span>
                   </p>
                 </div>
-                <p
-                  className="text-xs"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  PDF files only — processed entirely in your browser
-                </p>
               </>
             )}
           </div>
@@ -244,7 +289,7 @@ export default function UploadPage() {
         {/* Error */}
         {isError && state.kind === "error" && (
           <div
-            className="flex items-start gap-3 rounded-xl px-4 py-3 animate-fade-in"
+            className="flex items-start gap-3 rounded-xl px-4 py-3 max-w-2xl mx-auto animate-fade-in shrink-0"
             style={{
               background: "var(--color-danger-bg)",
               border: "1px solid var(--color-danger-border)",
@@ -264,48 +309,15 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* Actions */}
-        {isReady && (
-          <div className="flex items-center gap-3 animate-fade-in">
-            <button
-              type="button"
-              onClick={handleClear}
-              className="btn-secondary"
-              id="btn-clear-file"
-            >
-              <X size={15} />
-              Remove file
-            </button>
-            <button
-              type="button"
-              onClick={handleContinue}
-              className="btn-primary"
-              id="btn-continue-to-configure"
-            >
-              Continue
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M2.5 7h9M8 3.5L11.5 7 8 10.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
+        {/* Inline Footer note when no file uploaded yet */}
+        {!isReady && (
+          <p
+            className="text-xs text-center animate-fade-in mt-2 shrink-0"
+            style={{ color: "var(--color-text-muted)" }}
+          >
+            Your file never leaves your device. All processing happens locally.
+          </p>
         )}
-
-        {/* Footer note */}
-        <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-          Your file never leaves your device. All processing happens locally.
-        </p>
       </div>
     </PageShell>
   );

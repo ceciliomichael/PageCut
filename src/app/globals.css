@@ -11,6 +11,8 @@
   --color-text-muted: #9a9a94;
   --color-accent: #2d2d2a;
   --color-accent-hover: #1a1a18;
+  --color-accent-bg: rgba(45, 45, 42, 0.06);
+  --color-accent-bg-solid: #eeeeed;
   --color-tag-bg: #e8e8e5;
   --color-tag-text: #3a3a36;
   --color-danger-bg: #fef2f2;
@@ -26,6 +28,8 @@
     0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   --shadow-lifted:
     0 4px 12px 0 rgb(0 0 0 / 0.06), 0 2px 4px -1px rgb(0 0 0 / 0.04);
+  --shadow-accent:
+    0 4px 12px 0 rgb(0 0 0 / 0.12);
 }
 
 @layer base {
@@ -295,5 +299,67 @@
 
   .animate-spin-slow {
     animation: spin 1s linear infinite;
+  }
+
+  /* Mode selection cards (home dashboard) */
+  .mode-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-card);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.15s ease;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .mode-card:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-accent);
+    transform: translateY(-2px);
+  }
+
+  .mode-card:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Merge file list items */
+  .file-item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.15s ease;
+  }
+
+  .file-item-row:has(input:focus) {
+    border-color: var(--color-border-strong);
+  }
+
+  /* Icon container used in file cards */
+  .icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 0.625rem;
+    background: var(--color-bg-subtle);
+  }
+
+  .icon-box-accent {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 0.625rem;
+    background: var(--color-bg-subtle);
   }
 }

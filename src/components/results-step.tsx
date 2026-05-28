@@ -47,7 +47,7 @@ export default function ResultsPage() {
       return;
     }
     if (session.ranges.length === 0) {
-      router.replace("/configure");
+      router.replace("/split/configure");
       return;
     }
     void runExtraction();
@@ -110,7 +110,7 @@ export default function ResultsPage() {
   }
 
   function handleReconfigure() {
-    router.push("/configure");
+    router.push("/split/configure");
   }
 
   return (

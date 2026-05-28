@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PDF Extractor — Extract any page range",
+  title: "PageCut — Split & Merge PDFs in your browser",
   description:
-    "Upload a PDF, define custom page ranges, and download each range as a separate PDF. Fully client-side, nothing is uploaded to a server.",
+    "Extract specific page ranges from a PDF, or merge multiple PDFs into one. Fully client-side — your files never leave your device.",
   icons: {
     icon: "/favicon.svg",
   },

@@ -53,7 +53,7 @@ export default function ConfigurePage() {
   // Redirect back if session is missing (e.g. page refresh)
   useEffect(() => {
     if (!session) {
-      router.replace("/");
+      router.replace("/split");
     }
   }, [session, router]);
 
@@ -133,7 +133,7 @@ export default function ConfigurePage() {
     }));
 
     updateSessionRanges(ranges);
-    router.push("/results");
+    router.push("/split/results");
   }
 
   const canExtract = entries.some(
@@ -150,7 +150,7 @@ export default function ConfigurePage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/split")}
                 className="btn-secondary"
                 id="btn-back-to-upload"
               >
