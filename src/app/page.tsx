@@ -14,7 +14,10 @@ export default function HomePage() {
   }, []);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12 md:px-6 lg:px-8" style={{ background: "var(--color-bg)" }}>
+    <main
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-12 md:px-6 lg:px-8"
+      style={{ background: "var(--color-bg)" }}
+    >
       <div className="w-full max-w-2xl animate-fade-in-up">
         {/* Brand header */}
         <div className="flex items-center gap-2 mb-10 justify-center">
@@ -57,9 +60,7 @@ export default function HomePage() {
             className="mode-card p-6 group"
           >
             <div className="flex items-start justify-between mb-4">
-              <div
-                className="icon-box h-11 w-11"
-              >
+              <div className="icon-box h-11 w-11">
                 <Scissors
                   size={20}
                   style={{ color: "var(--color-text-secondary)" }}
@@ -88,8 +89,14 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--color-border)" }}>
-              <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+            <div
+              className="mt-5 pt-4"
+              style={{ borderTop: "1px solid var(--color-border)" }}
+            >
+              <p
+                className="text-xs"
+                style={{ color: "var(--color-text-muted)" }}
+              >
                 1 PDF → multiple files
               </p>
             </div>
@@ -103,9 +110,7 @@ export default function HomePage() {
             className="mode-card p-6 group"
           >
             <div className="flex items-start justify-between mb-4">
-              <div
-                className="icon-box h-11 w-11"
-              >
+              <div className="icon-box h-11 w-11">
                 <GitMerge
                   size={20}
                   style={{ color: "var(--color-text-secondary)" }}
@@ -134,8 +139,14 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--color-border)" }}>
-              <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+            <div
+              className="mt-5 pt-4"
+              style={{ borderTop: "1px solid var(--color-border)" }}
+            >
+              <p
+                className="text-xs"
+                style={{ color: "var(--color-text-muted)" }}
+              >
                 Multiple PDFs → 1 file
               </p>
             </div>
@@ -143,7 +154,10 @@ export default function HomePage() {
         </div>
 
         {/* Footer note */}
-        <p className="text-center text-xs mt-8" style={{ color: "var(--color-text-muted)" }}>
+        <p
+          className="text-center text-xs mt-8"
+          style={{ color: "var(--color-text-muted)" }}
+        >
           All processing happens in your browser. No uploads, no accounts.
         </p>
       </div>

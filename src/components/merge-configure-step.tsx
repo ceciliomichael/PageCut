@@ -12,10 +12,7 @@ import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { PageShell } from "@/components/page-shell";
 import { truncateFileName } from "@/lib/pdf-extract";
-import {
-  getMergeSession,
-  updateMergeSessionItems,
-} from "@/lib/pdf-session";
+import { getMergeSession, updateMergeSessionItems } from "@/lib/pdf-session";
 import type { MergeFileItem, MergeRangeMode } from "@/lib/pdf-session";
 
 // ─── local editing state (extends session type with raw input strings) ───────
@@ -92,11 +89,7 @@ export default function MergeConfigureStep() {
   }
 
   // ── custom range inputs ────────────────────────────────────────────────────
-  function updateRaw(
-    id: string,
-    field: "fromRaw" | "toRaw",
-    value: string,
-  ) {
+  function updateRaw(id: string, field: "fromRaw" | "toRaw", value: string) {
     setItems((prev) =>
       prev.map((item) =>
         item.id === id
@@ -190,7 +183,10 @@ export default function MergeConfigureStep() {
                 <ArrowRight size={15} />
               </button>
             </div>
-            <p className="text-xs text-center" style={{ color: "var(--color-text-muted)" }}>
+            <p
+              className="text-xs text-center"
+              style={{ color: "var(--color-text-muted)" }}
+            >
               Files are merged in the order shown. Drag to reorder.
             </p>
           </div>
@@ -304,13 +300,18 @@ function FileConfigCard({
             style={{ background: "var(--color-bg-subtle)" }}
             onMouseEnter={(e) => {
               if (index !== 0)
-                (e.currentTarget as HTMLButtonElement).style.background = "var(--color-bg)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "var(--color-bg)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--color-bg-subtle)";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "var(--color-bg-subtle)";
             }}
           >
-            <ArrowUp size={13} style={{ color: "var(--color-text-secondary)" }} />
+            <ArrowUp
+              size={13}
+              style={{ color: "var(--color-text-secondary)" }}
+            />
           </button>
           <button
             type="button"
@@ -321,13 +322,18 @@ function FileConfigCard({
             style={{ background: "var(--color-bg-subtle)" }}
             onMouseEnter={(e) => {
               if (index !== total - 1)
-                (e.currentTarget as HTMLButtonElement).style.background = "var(--color-bg)";
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "var(--color-bg)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "var(--color-bg-subtle)";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "var(--color-bg-subtle)";
             }}
           >
-            <ArrowDown size={13} style={{ color: "var(--color-text-secondary)" }} />
+            <ArrowDown
+              size={13}
+              style={{ color: "var(--color-text-secondary)" }}
+            />
           </button>
         </div>
 
@@ -336,7 +342,10 @@ function FileConfigCard({
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
           style={{ background: "var(--color-bg-subtle)" }}
         >
-          <FileText size={16} style={{ color: "var(--color-text-secondary)" }} />
+          <FileText
+            size={16}
+            style={{ color: "var(--color-text-secondary)" }}
+          />
         </div>
 
         {/* File info */}
@@ -382,7 +391,8 @@ function FileConfigCard({
                 item.rangeMode === mode
                   ? "var(--color-text-primary)"
                   : "var(--color-text-muted)",
-              borderRight: mode === "all" ? "1px solid var(--color-border)" : undefined,
+              borderRight:
+                mode === "all" ? "1px solid var(--color-border)" : undefined,
             }}
           >
             {mode === "all" ? "All pages" : "Custom range"}

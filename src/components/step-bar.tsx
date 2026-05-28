@@ -42,7 +42,9 @@ export function StepBar({ current, mode = "split" }: StepBarProps) {
                 {isDone ? (
                   <Check size={13} strokeWidth={2.5} />
                 ) : (
-                  <span className={`flex items-center justify-center leading-none select-none text-[11px] font-bold h-full w-full ${index === 0 ? "translate-x-[-1px]" : ""}`}>
+                  <span
+                    className={`flex items-center justify-center leading-none select-none text-[11px] font-bold h-full w-full ${index === 0 ? "translate-x-[-1px]" : ""}`}
+                  >
                     {index + 1}
                   </span>
                 )}

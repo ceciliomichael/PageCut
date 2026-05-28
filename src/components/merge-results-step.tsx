@@ -79,9 +79,12 @@ export default function MergeResultsStep() {
     try {
       const result = await mergePdfFiles(session.items);
 
-      const blob = new Blob([new Uint8Array(result.bytes).buffer as ArrayBuffer], {
-        type: "application/pdf",
-      });
+      const blob = new Blob(
+        [new Uint8Array(result.bytes).buffer as ArrayBuffer],
+        {
+          type: "application/pdf",
+        },
+      );
       const url = URL.createObjectURL(blob);
       objectUrlRef.current = url;
 
@@ -99,7 +102,9 @@ export default function MergeResultsStep() {
       setState({
         kind: "error",
         message:
-          err instanceof Error ? err.message : "An error occurred during merging.",
+          err instanceof Error
+            ? err.message
+            : "An error occurred during merging.",
       });
     }
   }
@@ -132,7 +137,9 @@ export default function MergeResultsStep() {
                   id="btn-merge-reconfigure"
                 >
                   <ArrowLeft size={15} />
-                  {state.kind === "error" ? "Edit configuration" : "Adjust files"}
+                  {state.kind === "error"
+                    ? "Edit configuration"
+                    : "Adjust files"}
                 </button>
                 <button
                   type="button"
@@ -144,7 +151,10 @@ export default function MergeResultsStep() {
                   Start over
                 </button>
               </div>
-              <p className="text-xs text-center" style={{ color: "var(--color-text-muted)" }}>
+              <p
+                className="text-xs text-center"
+                style={{ color: "var(--color-text-muted)" }}
+              >
                 {state.kind === "done"
                   ? "Your merged PDF was generated locally. You can adjust the files or start fresh."
                   : "An error occurred. Adjust your configuration or start over with new files."}
@@ -259,7 +269,10 @@ export default function MergeResultsStep() {
                 border: "1px solid var(--color-success-border)",
               }}
             >
-              <CheckCircle2 size={16} style={{ color: "var(--color-success-text)" }} />
+              <CheckCircle2
+                size={16}
+                style={{ color: "var(--color-success-text)" }}
+              />
               <p
                 className="text-sm font-medium"
                 style={{ color: "var(--color-success-text)" }}
@@ -281,7 +294,10 @@ export default function MergeResultsStep() {
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                   style={{ background: "var(--color-bg-subtle)" }}
                 >
-                  <FileDown size={18} style={{ color: "var(--color-text-secondary)" }} />
+                  <FileDown
+                    size={18}
+                    style={{ color: "var(--color-text-secondary)" }}
+                  />
                 </div>
                 <div className="min-w-0">
                   <p
@@ -290,7 +306,10 @@ export default function MergeResultsStep() {
                   >
                     {state.fileName}
                   </p>
-                  <p className="mt-0.5 text-xs" style={{ color: "var(--color-text-muted)" }}>
+                  <p
+                    className="mt-0.5 text-xs"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
                     {state.result.totalPages} pages total ·{" "}
                     {formatFileSize(state.result.bytes)}
                   </p>
@@ -332,7 +351,10 @@ export default function MergeResultsStep() {
                     >
                       {c.fileName}
                     </p>
-                    <p className="text-xs shrink-0" style={{ color: "var(--color-text-muted)" }}>
+                    <p
+                      className="text-xs shrink-0"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
                       {c.fromPage === c.toPage
                         ? `p. ${c.fromPage}`
                         : `pp. ${c.fromPage}–${c.toPage}`}{" "}

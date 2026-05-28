@@ -21,7 +21,9 @@ export type MergeResult = {
  *
  * @throws When a file cannot be loaded, or a page range exceeds the document.
  */
-export async function mergePdfFiles(items: MergeFileItem[]): Promise<MergeResult> {
+export async function mergePdfFiles(
+  items: MergeFileItem[],
+): Promise<MergeResult> {
   if (items.length === 0) {
     throw new Error("At least one PDF file is required to merge.");
   }

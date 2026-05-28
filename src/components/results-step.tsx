@@ -12,7 +12,11 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { PageShell } from "@/components/page-shell";
-import { type ExtractedChunk, extractPageRanges, truncateFileName } from "@/lib/pdf-extract";
+import {
+  type ExtractedChunk,
+  extractPageRanges,
+  truncateFileName,
+} from "@/lib/pdf-extract";
 import { clearSession, getSession } from "@/lib/pdf-session";
 
 type ProcessState =
@@ -145,7 +149,8 @@ export default function ResultsPage() {
                 className="text-xs text-center"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                Your splits were generated locally. You can adjust the ranges or start over with a new PDF template.
+                Your splits were generated locally. You can adjust the ranges or
+                start over with a new PDF template.
               </p>
             </div>
           </div>
@@ -176,14 +181,17 @@ export default function ResultsPage() {
                 className="text-xs text-center"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                An error occurred during splitting. Adjust your page ranges or start over with a new PDF template.
+                An error occurred during splitting. Adjust your page ranges or
+                start over with a new PDF template.
               </p>
             </div>
           </div>
         ) : null
       }
     >
-      <div className={`flex-1 flex flex-col w-full space-y-4 ${state.kind !== "processing" ? "overflow-hidden" : "justify-center"}`}>
+      <div
+        className={`flex-1 flex flex-col w-full space-y-4 ${state.kind !== "processing" ? "overflow-hidden" : "justify-center"}`}
+      >
         {/* Sticky Page Title and Description */}
         <div className="space-y-1.5 text-center shrink-0">
           <h1

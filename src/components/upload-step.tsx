@@ -141,14 +141,17 @@ export default function UploadPage() {
                 className="text-xs text-center"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                Your file never leaves your device. All processing happens locally.
+                Your file never leaves your device. All processing happens
+                locally.
               </p>
             </div>
           </div>
         ) : undefined
       }
     >
-      <div className={`w-full space-y-6 ${isReady ? "flex-1 flex flex-col justify-center pb-28" : ""}`}>
+      <div
+        className={`w-full space-y-6 ${isReady ? "flex-1 flex flex-col justify-center pb-28" : ""}`}
+      >
         <div className="space-y-2 text-center shrink-0">
           <h1
             className="text-2xl font-semibold tracking-tight md:text-3xl"

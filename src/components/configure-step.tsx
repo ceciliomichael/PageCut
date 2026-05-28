@@ -17,7 +17,11 @@ import {
   useState,
 } from "react";
 import { PageShell } from "@/components/page-shell";
-import { type PageRange, truncateFileName, validateRange } from "@/lib/pdf-extract";
+import {
+  type PageRange,
+  truncateFileName,
+  validateRange,
+} from "@/lib/pdf-extract";
 import { getSession, updateSessionRanges } from "@/lib/pdf-session";
 
 type RangeEntry = PageRange & {

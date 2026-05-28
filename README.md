@@ -1,28 +1,44 @@
 # PageCut
 
-PageCut is a premium, client-side web application designed to split a PDF into custom page ranges. Built with Next.js, Tailwind CSS v4, and pdf-lib, it provides an elegant, locked app-shell experience where all file processing happens locally in the user's browser for maximum speed and absolute security.
+PageCut is a simple, elegant, and secure web application designed to split and merge PDF documents. All processing is executed locally in the browser, meaning files are never uploaded to any remote server.
 
 ---
 
-## Key Features
+## What It Is For
 
-* **Client-Side Architecture**: PDFs are processed entirely in the local browser. Your files never touch a server, ensuring 100% privacy and security.
-* **Custom Range Splitting**: Define multiple page ranges (e.g. `1-5`, `10-20`) with custom labels. Ranges can overlap, and each range extracts into a separate, beautifully structured PDF file.
-* **Unified Flat UI Design**: An elegant, distraction-free neutral visual language featuring custom thin scrollbars, smooth responsive grid structures, and a mobile-first app-shell.
-* **Locked Viewport Layout**: Features a sticky header and fixed bottom actions bar, providing a native-app feel. Only the central lists (page ranges, download cards) scroll, maintaining focus and stability.
-* **Range Persistence**: Click *"Adjust ranges"* to go back and refine your settings—your configuration is fully preserved in a lightweight session store.
-* **Smart File Truncation**: Gracefully manages extremely long file names, keeping exactly three dots (`...`) right before the extension (e.g. `my_extremely_long_annual_report...pdf`) to protect visual hierarchy while retaining the extension.
-* **Multi-Layer Validation**: Prevents out-of-bound ranges, negative pages, overlapping labels, or structural errors before compilation even starts.
+PageCut is built to help individuals and businesses easily split large PDFs into targeted segments, or combine multiple PDF files into one clean document. Whether you need to save a single chapter from a digital textbook, separate monthly reports from a consolidated yearly file, or merge several independent documents into a single presentation, PageCut handles these tasks with ease.
+
+Key features include:
+* **Split and Extract**: Upload a single PDF and extract specific page ranges (such as pages 1-5, and pages 10-12) into separate downloadable files.
+* **Merge PDFs**: Combine multiple PDFs into a single document. You can easily drag files to reorder them and even specify exactly which pages to include from each file.
+* **Custom Labels**: Assign custom names to your split files so that your documents are neatly organized as soon as they are downloaded.
+* **Adjustable Workflows**: Go back and adjust your selected page ranges or file order at any point during your session without needing to re-upload your documents.
+* **Friendly and Clean Interface**: A distraction-free visual workspace designed to be comfortable and simple to navigate.
 
 ---
 
-## Technology Stack
+## Why It Was Built
 
-* **Framework**: Next.js (App Router, Turbopack enabled)
-* **Styling**: Tailwind CSS v4 (OKLCH palette, custom theme tokens)
-* **Processing**: pdf-lib (High-performance JS PDF editing)
-* **Icons**: Lucide React (Clean, modern outlines)
-* **Tooling**: Biome (Fast format & lint tool)
+Standard online utilities for managing PDFs often introduce privacy, security, and usability challenges. PageCut was created to address these specific issues:
+
+### Absolute Data Privacy
+Traditional web-based PDF tools require you to upload your files to their external servers. If your documents contain sensitive personal information, proprietary business details, or financial records, this represents a significant data security risk. PageCut operates entirely on your local device—your files never leave your computer.
+
+### High-Speed Processing
+Uploading large PDF files to the cloud can be slow, depending on your internet connection. Since PageCut processes files locally using your browser's capabilities, the splitting and merging are nearly instantaneous.
+
+### Professional and Focused Experience
+Many free web utilities are cluttered with distracting advertisements, pop-ups, and complex, confusing navigation steps. PageCut provides a clean, premium, and unified interface focused solely on getting your tasks done efficiently.
+
+---
+
+## How It Works (Project Architecture)
+
+The application is structured into clearly separated areas, ensuring the system remains easy to maintain and extend:
+
+* **App Routes (`src/app/`)**: Manages the distinct steps and screen views of the application—including the main home dashboard, the split and merge workflows, configuration views, and download pages.
+* **User Interface Components (`src/components/`)**: Houses the visual elements of the application, including the drag-and-drop file upload zones, step navigation trackers, file reordering tools, and page-range inputs.
+* **Local Processing Engine (`src/lib/`)**: Contains the core logic responsible for performing the PDF extraction (`pdf-extract.ts`, `pdf-split.ts`) and combining (`pdf-merge.ts`) directly inside your browser, as well as the lightweight session manager (`pdf-session.ts`) that holds your documents active while you work.
 
 ---
 
@@ -30,9 +46,9 @@ PageCut is a premium, client-side web application designed to split a PDF into c
 
 ### Prerequisites
 
-Ensure you have Node.js v20+ installed on your machine.
+You will need Node.js version 20 or higher installed on your computer.
 
-### Local Development
+### Local Development Setup
 
 1. **Install dependencies**:
    ```bash
@@ -43,100 +59,51 @@ Ensure you have Node.js v20+ installed on your machine.
    ```bash
    npm run dev
    ```
-   The application will run locally on `http://localhost:3001` (or next available port).
+   Open your browser and navigate to `http://localhost:3001` (or the port specified in your terminal).
 
-3. **Check Code Standards & Lints**:
+3. **Check code quality**:
    ```bash
    npm run lint
    ```
 
-4. **Format Source Code**:
+4. **Automatically format code**:
    ```bash
    npm run format
    ```
 
-5. **Compile Production Bundle**:
-   ```bash
-   npm run build
-   ```
-
 ---
 
-## Docker Deployment (Port 3089)
+## Running with Docker
 
-We provide an optimized, multi-stage production Docker environment built on lightweight Alpine images to minimize package size and CPU overhead.
+For production or isolated deployments, a Docker configuration is provided.
 
-### Option A: Using Docker Compose (Recommended)
+### Option A: Using Docker Compose
 
-Docker Compose abstracts all build arguments into a clean configuration file. 
-
-1. **Start the application** in detached mode (builds automatically if needed):
+1. **Start the application**:
    ```bash
    docker compose up -d
    ```
 
-2. **Follow runtime logs**:
-   ```bash
-   docker compose logs -f
-   ```
-
-3. **Stop the application**:
+2. **Stop the application**:
    ```bash
    docker compose down
    ```
 
 ### Option B: Using Standalone Docker Commands
 
-1. **Build the Docker Image**:
-   Navigate to the project root directory and build the container:
+1. **Build the container image**:
    ```bash
    docker build -t pagecut .
    ```
 
-2. **Run the Container**:
-   Spin up the container, mapping its internal production server to port **`3089`**:
+2. **Run the container (on port 3089)**:
    ```bash
    docker run -d -p 3089:3089 --name pagecut-app pagecut
    ```
 
-3. **Stop the Container**:
+3. **Stop and remove the container**:
    ```bash
    docker stop pagecut-app && docker rm pagecut-app
    ```
 
----
-
-### Verify Deployment
-
-Once started, open your browser and navigate to:
-```url
-http://localhost:3089
-```
-
----
-
-## Project Architecture
-
-```txt
-src/
-├── app/
-│   ├── configure/
-│   │   └── page.tsx        # Configuration wizard route
-│   ├── results/
-│   │   └── page.tsx        # Compiled downloads list route
-│   ├── globals.css         # Tailwind v4 theme configurations
-│   ├── layout.tsx          # Root typography & Inter font setup
-│   └── page.tsx            # Entrypoint (delegates to upload step)
-├── components/
-│   ├── configure-step.tsx  # Step 2: Scrollable range builder
-│   ├── page-shell.tsx      # Unified app header & layout shell
-│   ├── results-step.tsx    # Step 3: Local compiler & download manager
-│   ├── step-bar.tsx        # Wizard step-progress tracker
-│   └── upload-step.tsx     # Step 1: Centered drag-drop upload zone
-└── lib/
-    ├── pdf-extract.ts      # Browser-local pdf compilation & truncation
-    └── pdf-session.ts      # In-memory transient session store
-```
-
-### Transient Memory Session Store
-To maintain an elite speed benchmark, PageCut avoids writing temporary files or large File buffers to slow local storage/cookies. It utilizes a module-level transient singleton (`src/lib/pdf-session.ts`) to share File streams securely and directly across Next.js app routes, automatically cleaning up memory allocations when users complete their session or click *"Start Over"*.
+Once running via Docker, access the application by visiting `http://localhost:3089` in your web browser.

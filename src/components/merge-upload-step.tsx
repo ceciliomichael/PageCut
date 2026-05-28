@@ -63,11 +63,15 @@ export default function MergeUploadStep() {
   // ── process one or more dropped / selected files ──────────────────────────
   async function processFiles(files: File[]) {
     const pdfs = files.filter(
-      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
+      (f) =>
+        f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
     );
 
     if (pdfs.length === 0) {
-      setUploadState({ kind: "error", message: "Only PDF files are accepted." });
+      setUploadState({
+        kind: "error",
+        message: "Only PDF files are accepted.",
+      });
       return;
     }
     if (pdfs.length < files.length) {
@@ -104,11 +108,15 @@ export default function MergeUploadStep() {
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setUploadState((prev) => (prev.kind !== "dragging" ? { kind: "dragging" } : prev));
+    setUploadState((prev) =>
+      prev.kind !== "dragging" ? { kind: "dragging" } : prev,
+    );
   }, []);
 
   const handleDragLeave = useCallback(() => {
-    setUploadState((prev) => (prev.kind === "dragging" ? { kind: "idle" } : prev));
+    setUploadState((prev) =>
+      prev.kind === "dragging" ? { kind: "idle" } : prev,
+    );
   }, []);
 
   async function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -151,7 +159,10 @@ export default function MergeUploadStep() {
             <div className="w-full max-w-2xl py-4 space-y-3 flex flex-col items-center">
               {/* Requirement hint */}
               {items.length === 1 && (
-                <p className="text-xs animate-fade-in text-center" style={{ color: "var(--color-text-muted)" }}>
+                <p
+                  className="text-xs animate-fade-in text-center"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
                   Add at least one more PDF to continue.
                 </p>
               )}
@@ -165,22 +176,40 @@ export default function MergeUploadStep() {
                   id="btn-merge-continue"
                 >
                   Continue
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path d="M2.5 7h9M8 3.5L11.5 7 8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M2.5 7h9M8 3.5L11.5 7 8 10.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </button>
               )}
 
               {/* Privacy note */}
-              <p className="text-xs text-center" style={{ color: "var(--color-text-muted)" }}>
-                Your files never leave your device. All processing happens locally.
+              <p
+                className="text-xs text-center"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                Your files never leave your device. All processing happens
+                locally.
               </p>
             </div>
           </div>
         ) : undefined
       }
     >
-      <div className={`w-full space-y-4 ${items.length > 0 ? "flex-1 flex flex-col overflow-hidden" : ""}`}>
+      <div
+        className={`w-full space-y-4 ${items.length > 0 ? "flex-1 flex flex-col overflow-hidden" : ""}`}
+      >
         <input
           ref={inputRef}
           type="file"
@@ -226,12 +255,13 @@ export default function MergeUploadStep() {
             }}
             className="relative overflow-hidden rounded-2xl transition-all duration-200 w-full max-w-2xl mx-auto shrink-0 animate-fade-in"
             style={{
-              background: isDragging ? "var(--color-bg-subtle)" : "var(--color-surface)",
+              background: isDragging
+                ? "var(--color-bg-subtle)"
+                : "var(--color-surface)",
               border: `2px dashed ${isDragging ? "var(--color-border-strong)" : "var(--color-border)"}`,
               cursor: isLoading ? "default" : "pointer",
             }}
           >
-
             <div className="flex min-h-72 flex-col items-center justify-center gap-4 p-12 text-center">
               {isLoading ? (
                 <>
@@ -245,7 +275,10 @@ export default function MergeUploadStep() {
                       style={{ color: "var(--color-text-secondary)" }}
                     />
                   </div>
-                  <p className="text-sm font-medium" style={{ color: "var(--color-text-secondary)" }}>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "var(--color-text-secondary)" }}
+                  >
                     Reading PDFs…
                   </p>
                 </>
@@ -254,24 +287,37 @@ export default function MergeUploadStep() {
                   <div
                     className="flex h-12 w-12 items-center justify-center rounded-2xl transition-colors duration-200"
                     style={{
-                      background: isDragging ? "var(--color-border)" : "var(--color-bg-subtle)",
+                      background: isDragging
+                        ? "var(--color-border)"
+                        : "var(--color-bg-subtle)",
                     }}
                   >
-                    <Upload size={22} style={{ color: "var(--color-text-secondary)" }} />
+                    <Upload
+                      size={22}
+                      style={{ color: "var(--color-text-secondary)" }}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-base font-medium" style={{ color: "var(--color-text-primary)" }}>
-                      {isDragging ? "Release to add files" : "Drop PDF files here"}
+                    <p
+                      className="text-base font-medium"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      {isDragging
+                        ? "Release to add files"
+                        : "Drop PDF files here"}
                     </p>
-                    <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
                       or{" "}
                       <span
                         className="font-medium underline underline-offset-2"
                         style={{ color: "var(--color-text-secondary)" }}
                       >
                         click to browse
-                      </span>
-                      {" "}— you can select multiple files
+                      </span>{" "}
+                      — you can select multiple files
                     </p>
                   </div>
                 </>
@@ -289,8 +335,15 @@ export default function MergeUploadStep() {
               border: "1px solid var(--color-danger-border)",
             }}
           >
-            <AlertCircle size={16} className="mt-0.5 shrink-0" style={{ color: "var(--color-danger-text)" }} />
-            <p className="text-sm" style={{ color: "var(--color-danger-text)" }}>
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0"
+              style={{ color: "var(--color-danger-text)" }}
+            />
+            <p
+              className="text-sm"
+              style={{ color: "var(--color-danger-text)" }}
+            >
               {uploadState.message}
             </p>
           </div>
@@ -299,7 +352,10 @@ export default function MergeUploadStep() {
         {/* Stats row - Fixed, shrink-0 */}
         {items.length > 0 && (
           <div className="w-full max-w-2xl mx-auto px-4 flex items-center justify-between shrink-0 animate-fade-in">
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+            <p
+              className="text-xs font-semibold uppercase tracking-wider"
+              style={{ color: "var(--color-text-muted)" }}
+            >
               {items.length} {items.length === 1 ? "file" : "files"} added
             </p>
             <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
@@ -320,7 +376,10 @@ export default function MergeUploadStep() {
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                       style={{ background: "var(--color-bg-subtle)" }}
                     >
-                      <FileText size={16} style={{ color: "var(--color-text-secondary)" }} />
+                      <FileText
+                        size={16}
+                        style={{ color: "var(--color-text-secondary)" }}
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p
@@ -329,7 +388,10 @@ export default function MergeUploadStep() {
                       >
                         {truncateFileName(item.file.name)}
                       </p>
-                      <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                      <p
+                        className="text-xs"
+                        style={{ color: "var(--color-text-muted)" }}
+                      >
                         {formatFileSize(item.file.size)} · {item.totalPages}{" "}
                         {item.totalPages === 1 ? "page" : "pages"}
                       </p>
@@ -358,12 +420,16 @@ export default function MergeUploadStep() {
                   color: "var(--color-text-secondary)",
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border-strong)";
-                  (e.currentTarget as HTMLButtonElement).style.background = "var(--color-bg-subtle)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor =
+                    "var(--color-border-strong)";
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "var(--color-bg-subtle)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
-                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor =
+                    "var(--color-border)";
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    "transparent";
                 }}
               >
                 <Plus size={15} />
@@ -375,7 +441,10 @@ export default function MergeUploadStep() {
 
         {/* Privacy Note - Rendered inline when no files have been uploaded yet */}
         {items.length === 0 && (
-          <p className="text-xs text-center animate-fade-in shrink-0 mt-2" style={{ color: "var(--color-text-muted)" }}>
+          <p
+            className="text-xs text-center animate-fade-in shrink-0 mt-2"
+            style={{ color: "var(--color-text-muted)" }}
+          >
             Your files never leave your device. All processing happens locally.
           </p>
         )}
