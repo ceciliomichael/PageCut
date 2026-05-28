@@ -49,6 +49,9 @@ export default function MergeConfigureStep() {
   const [items, setItems] = useState<EditableItem[]>(() =>
     session ? session.items.map(toEditable) : [],
   );
+  const [outputName, setOutputName] = useState<string>(
+    session?.outputName ?? "",
+  );
 
   useEffect(() => {
     if (!session) {
@@ -149,6 +152,13 @@ export default function MergeConfigureStep() {
     }));
 
     updateMergeSessionItems(sessionItems);
+
+    // Persist the user-defined output name (trim whitespace; store undefined if empty)
+    const session = getMergeSession();
+    if (session) {
+      session.outputName = outputName.trim() || undefined;
+    }
+
     router.push("/merge/results");
   }
 
@@ -200,13 +210,40 @@ export default function MergeConfigureStep() {
             className="text-sm leading-6 max-w-md mx-auto"
             style={{ color: "var(--color-text-secondary)" }}
           >
-            Set the order and optionally restrict which pages to include from
-            each file.
+            Set the order, choose pages, and name your merged document.
           </p>
         </div>
 
-        {/* Scrollable list */}
-        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-1 pb-36 space-y-3">
+        {/* Output filename input - fixed, shrink-0 */}
+        <div className="w-full max-w-2xl mx-auto shrink-0">
+          <label
+            htmlFor="merge-output-name"
+            className="block text-xs font-medium mb-1.5"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Output filename
+          </label>
+          <div className="relative flex items-center">
+            <input
+              id="merge-output-name"
+              type="text"
+              value={outputName}
+              onChange={(e) => setOutputName(e.target.value)}
+              placeholder="e.g. project-brief"
+              maxLength={120}
+              className="input-field w-full pr-14"
+            />
+            <span
+              className="pointer-events-none absolute right-3 text-xs select-none"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              .pdf
+            </span>
+          </div>
+        </div>
+
+        {/* Scrollable file list */}
+        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-28 pb-2 scrollbar-thin space-y-3">
           {items.map((item, index) => (
             <FileConfigCard
               key={item.id}

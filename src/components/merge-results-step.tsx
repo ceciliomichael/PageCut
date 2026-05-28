@@ -85,9 +85,14 @@ export default function MergeResultsStep() {
       const url = URL.createObjectURL(blob);
       objectUrlRef.current = url;
 
-      const fileName = buildMergedFileName(
-        session.items.map((i) => i.file.name),
-      );
+      // Prefer the user-defined name; fall back to auto-generated
+      const userLabel = session.outputName?.trim();
+      const safeLabel = userLabel
+        ? userLabel.replace(/[^a-z0-9._-]+/gi, "-").replace(/\.pdf$/i, "")
+        : null;
+      const fileName = safeLabel
+        ? `${safeLabel}.pdf`
+        : buildMergedFileName(session.items.map((i) => i.file.name));
 
       setState({ kind: "done", result, url, fileName });
     } catch (err) {

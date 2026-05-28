@@ -62,6 +62,8 @@ export type MergeFileItem = {
 
 export type MergeSession = {
   items: MergeFileItem[];
+  /** Optional user-defined name for the merged PDF output (without extension). */
+  outputName?: string;
 };
 
 let _mergeSession: MergeSession | null = null;
