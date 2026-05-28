@@ -227,7 +227,7 @@ export default function ConfigurePage() {
         </div>
 
         {/* Scrollable Range List Area */}
-        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 pb-36 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-44 sm:mb-28 pb-2 scrollbar-thin">
           <div className="space-y-3">
             {entries.map((entry, index) => (
               <RangeRow
