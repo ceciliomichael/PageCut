@@ -22,7 +22,7 @@ export function PageShell({
   return (
     <main
       className={`relative flex flex-col items-center px-4 py-4 md:px-6 lg:px-8 ${
-        fullHeight ? "h-screen overflow-hidden" : "min-h-screen"
+        fullHeight ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]"
       }`}
     >
       {/* Header - Sticky at the top */}
