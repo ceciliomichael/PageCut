@@ -14,6 +14,8 @@ import type {
   PageNumberOptions,
   PageNumbersSession,
   PdfUtilitySession,
+  ResizeSession,
+  SignSession,
   WatermarkOptions,
   WatermarkSession,
 } from "./pdf-utility-session";
@@ -300,11 +302,118 @@ async function cropPdf(session: CropSession): Promise<PdfUtilityResult> {
   };
 }
 
+async function resizePdf(session: ResizeSession): Promise<PdfUtilityResult> {
+  const { width, height, mode } = session.options;
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width < 36 ||
+    height < 36 ||
+    width > 14_400 ||
+    height > 14_400
+  ) {
+    throw new Error("Choose a valid page size.");
+  }
+
+  const source = await PDFDocument.load(await session.file.arrayBuffer(), {
+    ignoreEncryption: false,
+  });
+  const output = await PDFDocument.create();
+  const embeddedPages = await output.embedPages(source.getPages());
+
+  for (const embedded of embeddedPages) {
+    const page = output.addPage([width, height]);
+    const fitScale = Math.min(width / embedded.width, height / embedded.height);
+    const fillScale = Math.max(
+      width / embedded.width,
+      height / embedded.height,
+    );
+    const scale = mode === "fit" ? fitScale : mode === "fill" ? fillScale : 1;
+    const drawWidth = embedded.width * scale;
+    const drawHeight = embedded.height * scale;
+    page.drawPage(embedded, {
+      x: (width - drawWidth) / 2,
+      y: (height - drawHeight) / 2,
+      width: drawWidth,
+      height: drawHeight,
+    });
+  }
+
+  return {
+    bytes: await output.save(),
+    totalPages: output.getPageCount(),
+    summary: `${output.getPageCount()} ${output.getPageCount() === 1 ? "page" : "pages"} resized`,
+  };
+}
+
+function clampPlacement(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+async function signPdf(session: SignSession): Promise<PdfUtilityResult> {
+  const document = await PDFDocument.load(await session.file.arrayBuffer(), {
+    ignoreEncryption: false,
+  });
+  const { options } = session;
+  const placement = options.placement;
+  if (
+    placement.pageIndex < 0 ||
+    placement.pageIndex >= document.getPageCount()
+  ) {
+    throw new Error("Choose a valid page for the signature.");
+  }
+  if (!Number.isFinite(placement.width) || placement.width < 0.08) {
+    throw new Error("Signature size is invalid.");
+  }
+
+  const page = document.getPage(placement.pageIndex);
+  const { width: pageWidth, height: pageHeight } = page.getSize();
+  const x = clampPlacement(placement.x) * pageWidth;
+  const top = clampPlacement(placement.y) * pageHeight;
+  const targetWidth = Math.min(pageWidth * 0.9, pageWidth * placement.width);
+
+  if (options.mode === "type") {
+    const text = options.text.trim();
+    if (!text) throw new Error("Type your signature first.");
+    const font = await document.embedFont(StandardFonts.TimesRomanItalic);
+    const widthAtOne = Math.max(0.001, font.widthOfTextAtSize(text, 1));
+    const maxByWidth = targetWidth / widthAtOne;
+    const desiredFontSize = pageWidth * placement.width * 0.18;
+    const fontSize = Math.min(desiredFontSize, maxByWidth);
+    const textHeight = font.heightAtSize(fontSize);
+    page.drawText(text, {
+      x: Math.min(x, pageWidth - targetWidth),
+      y: Math.max(0, pageHeight - top - textHeight),
+      size: fontSize,
+      font,
+      color: rgb(0.08, 0.08, 0.08),
+    });
+  } else {
+    if (!options.image) throw new Error("Create or upload a signature first.");
+    const image = await embedImageFile(document, options.image.file);
+    const drawHeight = targetWidth * (image.height / image.width);
+    page.drawImage(image, {
+      x: Math.min(x, pageWidth - targetWidth),
+      y: Math.max(0, pageHeight - top - drawHeight),
+      width: targetWidth,
+      height: drawHeight,
+    });
+  }
+
+  return {
+    bytes: await document.save(),
+    totalPages: document.getPageCount(),
+    summary: `Signature added to page ${placement.pageIndex + 1}`,
+  };
+}
+
 export async function processPdfUtility(
   session: PdfUtilitySession,
 ): Promise<PdfUtilityResult> {
   if (session.kind === "organize") return organizePdf(session);
   if (session.kind === "page-numbers") return addPageNumbers(session);
   if (session.kind === "crop") return cropPdf(session);
+  if (session.kind === "resize") return resizePdf(session);
+  if (session.kind === "sign") return signPdf(session);
   return addWatermark(session);
 }

@@ -55,6 +55,24 @@ const PDF_TO_IMAGE_STEPS: Step[] = [
   { label: "Download", description: "Save your images" },
 ];
 
+const EXTRACT_IMAGES_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Scan", description: "Choose pages to scan" },
+  { label: "Download", description: "Save extracted images" },
+];
+
+const RESIZE_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Resize", description: "Set page dimensions" },
+  { label: "Save", description: "Download your PDF" },
+];
+
+const SIGN_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Sign", description: "Create and place signature" },
+  { label: "Save", description: "Download signed PDF" },
+];
+
 type StepBarProps = {
   current: 0 | 1 | 2;
   mode?:
@@ -65,7 +83,10 @@ type StepBarProps = {
     | "page-numbers"
     | "watermark"
     | "crop"
-    | "pdf-to-image";
+    | "pdf-to-image"
+    | "extract-images"
+    | "resize"
+    | "sign";
 };
 
 export function StepBar({ current, mode = "split" }: StepBarProps) {
@@ -84,7 +105,13 @@ export function StepBar({ current, mode = "split" }: StepBarProps) {
                 ? CROP_STEPS
                 : mode === "pdf-to-image"
                   ? PDF_TO_IMAGE_STEPS
-                  : SPLIT_STEPS;
+                  : mode === "extract-images"
+                    ? EXTRACT_IMAGES_STEPS
+                    : mode === "resize"
+                      ? RESIZE_STEPS
+                      : mode === "sign"
+                        ? SIGN_STEPS
+                        : SPLIT_STEPS;
 
   return (
     <div className="flex items-center gap-0">

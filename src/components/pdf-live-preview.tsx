@@ -9,6 +9,10 @@ import type {
   PageNumberOptions,
   PdfUtilitySession,
   QuarterTurn,
+  ResizeMode,
+  ResizeOptions,
+  SignaturePlacement,
+  SignOptions,
   WatermarkOptions,
 } from "@/lib/pdf-utility-session";
 
@@ -50,6 +54,11 @@ type PreviewPageSpec = {
   marker?: string;
   marked?: boolean;
   allowOverlayOverflow?: boolean;
+  frame?: {
+    width: number;
+    height: number;
+    mode: ResizeMode;
+  };
 };
 
 type PageInfo = {
@@ -57,6 +66,8 @@ type PageInfo = {
   width: number;
   height: number;
   displayScale: number;
+  sourceWidth: number;
+  sourceHeight: number;
 };
 
 type MergePreviewItem = {
@@ -86,6 +97,19 @@ const documentCache = new WeakMap<File, Promise<PdfDocumentProxy>>();
 
 function normalizeRotation(rotation: number): number {
   return ((rotation % 360) + 360) % 360;
+}
+
+function getFrameContentScale(
+  sourceWidth: number,
+  sourceHeight: number,
+  frame: PreviewPageSpec["frame"],
+): number {
+  if (!frame || frame.mode === "center") return 1;
+  const horizontal = frame.width / sourceWidth;
+  const vertical = frame.height / sourceHeight;
+  return frame.mode === "fill"
+    ? Math.max(horizontal, vertical)
+    : Math.min(horizontal, vertical);
 }
 
 function useObjectUrl(file?: File): string | null {
@@ -442,6 +466,129 @@ function CropOverlay({
   );
 }
 
+type SignatureGesture = {
+  clientX: number;
+  clientY: number;
+  placement: SignaturePlacement;
+};
+
+function SignatureOverlay({
+  active,
+  options,
+  imageUrl,
+  onSelect,
+  onChange,
+}: {
+  active: boolean;
+  options: SignOptions;
+  imageUrl: string | null;
+  onSelect: () => void;
+  onChange: (placement: SignaturePlacement) => void;
+}) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const signatureRef = useRef<HTMLDivElement | null>(null);
+  const gestureRef = useRef<SignatureGesture | null>(null);
+  const placement = options.placement;
+  const hasContent =
+    options.mode === "type"
+      ? options.text.trim().length > 0
+      : Boolean(imageUrl);
+
+  function startGesture(
+    event: React.PointerEvent<HTMLDivElement | HTMLButtonElement>,
+  ) {
+    if (!active || !hasContent) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    gestureRef.current = {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      placement,
+    };
+  }
+
+  function moveGesture(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = gestureRef.current;
+    const root = rootRef.current;
+    if (!gesture || !root) return;
+    const rect = root.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const dx = (event.clientX - gesture.clientX) / rect.width;
+    const dy = (event.clientY - gesture.clientY) / rect.height;
+    const signatureHeight = signatureRef.current
+      ? signatureRef.current.getBoundingClientRect().height / rect.height
+      : 0.08;
+    onChange({
+      ...placement,
+      x: Math.min(
+        Math.max(0, 1 - gesture.placement.width),
+        Math.max(0, gesture.placement.x + dx),
+      ),
+      y: Math.min(
+        Math.max(0, 1 - signatureHeight),
+        Math.max(0, gesture.placement.y + dy),
+      ),
+    });
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      className={`absolute inset-0 z-20 ${active ? "" : "cursor-pointer"}`}
+      onPointerDown={(event) => {
+        if (!active) {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      onPointerMove={moveGesture}
+      onPointerUp={() => {
+        gestureRef.current = null;
+      }}
+      onPointerCancel={() => {
+        gestureRef.current = null;
+      }}
+    >
+      {active && hasContent && (
+        <div
+          ref={signatureRef}
+          className="absolute z-20 cursor-move touch-none select-none"
+          style={{
+            left: `${placement.x * 100}%`,
+            top: `${placement.y * 100}%`,
+            width: `${placement.width * 100}%`,
+            containerType: "inline-size",
+          }}
+          onPointerDown={startGesture}
+        >
+          {options.mode === "type" ? (
+            <div
+              className="whitespace-nowrap font-serif italic leading-none text-neutral-900"
+              style={{
+                fontSize: `${Math.min(18, 100 / Math.max(options.text.trim().length * 0.58, 1))}cqw`,
+              }}
+            >
+              {options.text.trim()}
+            </div>
+          ) : imageUrl ? (
+            // The source is always a local object URL created from the user's file.
+            // biome-ignore lint/performance/noImgElement: local blob URLs do not benefit from Next image optimization.
+            <img
+              src={imageUrl}
+              alt="Signature preview"
+              draggable={false}
+              className="block h-auto w-full select-none"
+            />
+          ) : null}
+          <div className="pointer-events-none absolute inset-0 z-20 border border-[var(--color-accent)]" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PdfCanvasPage({
   document,
   spec,
@@ -485,12 +632,19 @@ function PdfCanvasPage({
       if (cancelled) return;
       const rotation = normalizeRotation(page.rotate + spec.rotation);
       const base = page.getViewport({ scale: 1, rotation });
-      const displayScale = Math.min(MAX_CSS_SCALE, MAX_PAGE_WIDTH / base.width);
+      const targetWidth = spec.frame?.width ?? base.width;
+      const targetHeight = spec.frame?.height ?? base.height;
+      const displayScale = Math.min(
+        MAX_CSS_SCALE,
+        MAX_PAGE_WIDTH / targetWidth,
+      );
       setPageInfo({
         page,
-        width: base.width * displayScale,
-        height: base.height * displayScale,
+        width: targetWidth * displayScale,
+        height: targetHeight * displayScale,
         displayScale,
+        sourceWidth: base.width,
+        sourceHeight: base.height,
       });
       setRendered(false);
     });
@@ -498,7 +652,13 @@ function PdfCanvasPage({
     return () => {
       cancelled = true;
     };
-  }, [document, spec.rotation, spec.sourceIndex]);
+  }, [
+    document,
+    spec.frame?.height,
+    spec.frame?.width,
+    spec.rotation,
+    spec.sourceIndex,
+  ]);
 
   useEffect(() => {
     const element = wrapperRef.current;
@@ -524,8 +684,13 @@ function PdfCanvasPage({
     renderTaskRef.current?.cancel();
     const outputScale = Math.min(window.devicePixelRatio || 1, 1.5);
     const rotation = normalizeRotation(info.page.rotate + spec.rotation);
+    const contentScale = getFrameContentScale(
+      info.sourceWidth,
+      info.sourceHeight,
+      spec.frame,
+    );
     const viewport = info.page.getViewport({
-      scale: info.displayScale * outputScale,
+      scale: info.displayScale * contentScale * outputScale,
       rotation,
     });
     const context = canvas.getContext("2d", { alpha: false });
@@ -557,10 +722,26 @@ function PdfCanvasPage({
       cancelled = true;
       task.cancel();
     };
-  }, [pageInfo, spec.rotation, visible]);
+  }, [pageInfo, spec.frame, spec.rotation, visible]);
 
   const width = pageInfo?.width ?? 612;
   const height = pageInfo?.height ?? 792;
+  const contentScale = pageInfo
+    ? getFrameContentScale(
+        pageInfo.sourceWidth,
+        pageInfo.sourceHeight,
+        spec.frame,
+      )
+    : 1;
+  const canvasStyle: CSSProperties | undefined =
+    pageInfo && spec.frame
+      ? {
+          left: `${((spec.frame.width - pageInfo.sourceWidth * contentScale) / spec.frame.width / 2) * 100}%`,
+          top: `${((spec.frame.height - pageInfo.sourceHeight * contentScale) / spec.frame.height / 2) * 100}%`,
+          width: `${(pageInfo.sourceWidth * contentScale * 100) / spec.frame.width}%`,
+          height: `${(pageInfo.sourceHeight * contentScale * 100) / spec.frame.height}%`,
+        }
+      : undefined;
 
   return (
     <div className="flex justify-center px-4 sm:px-5 md:px-6">
@@ -576,9 +757,10 @@ function PdfCanvasPage({
         <div className="absolute inset-0 overflow-hidden bg-white shadow-[0_4px_18px_rgba(0,0,0,0.10)] sm:shadow-[0_8px_28px_rgba(0,0,0,0.10)]">
           <canvas
             ref={canvasRef}
-            className={`absolute inset-0 z-0 h-full w-full transition-opacity duration-150 ${
+            className={`absolute z-0 transition-opacity duration-150 ${
               rendered ? "opacity-100" : "opacity-0"
-            }`}
+            } ${spec.frame ? "" : "inset-0 h-full w-full"}`}
+            style={canvasStyle}
           />
           {!rendered && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
@@ -882,6 +1064,87 @@ export function CropLivePreview({
           active={spec.sourceIndex === selectedPage}
           onSelect={() => onSelectPage(spec.sourceIndex)}
           onChange={(next) => onChange(spec.sourceIndex, next)}
+        />
+      )}
+    />
+  );
+}
+
+export function ResizeLivePreview({
+  file,
+  totalPages,
+  options,
+}: {
+  file: File;
+  totalPages: number;
+  options: ResizeOptions;
+}) {
+  const pages = useMemo<PreviewPageSpec[]>(
+    () =>
+      Array.from({ length: totalPages }, (_, sourceIndex) => ({
+        id: `resize-page-${sourceIndex}`,
+        file,
+        sourceIndex,
+        rotation: 0,
+        outputIndex: sourceIndex,
+        frame: {
+          width: options.width,
+          height: options.height,
+          mode: options.mode,
+        },
+      })),
+    [file, options.height, options.mode, options.width, totalPages],
+  );
+
+  return (
+    <PdfPreviewSurface
+      pages={pages}
+      pageCount={totalPages}
+      title="Resize preview"
+    />
+  );
+}
+
+export function SignLivePreview({
+  file,
+  totalPages,
+  options,
+  onChange,
+  onSelectPage,
+}: {
+  file: File;
+  totalPages: number;
+  options: SignOptions;
+  onChange: (placement: SignaturePlacement) => void;
+  onSelectPage: (pageIndex: number) => void;
+}) {
+  const imageUrl = useObjectUrl(options.image?.file);
+  const pages = useMemo<PreviewPageSpec[]>(
+    () =>
+      Array.from({ length: totalPages }, (_, sourceIndex) => ({
+        id: `sign-page-${sourceIndex}`,
+        file,
+        sourceIndex,
+        rotation: 0,
+        outputIndex: sourceIndex,
+        marker:
+          sourceIndex === options.placement.pageIndex ? "Signing" : undefined,
+      })),
+    [file, options.placement.pageIndex, totalPages],
+  );
+
+  return (
+    <PdfPreviewSurface
+      pages={pages}
+      pageCount={totalPages}
+      title="Signature preview"
+      renderOverlay={(spec) => (
+        <SignatureOverlay
+          active={spec.sourceIndex === options.placement.pageIndex}
+          options={options}
+          imageUrl={imageUrl}
+          onSelect={() => onSelectPage(spec.sourceIndex)}
+          onChange={onChange}
         />
       )}
     />

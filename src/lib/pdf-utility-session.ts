@@ -1,4 +1,10 @@
-export type PdfUtilityKind = "organize" | "page-numbers" | "watermark" | "crop";
+export type PdfUtilityKind =
+  | "organize"
+  | "page-numbers"
+  | "watermark"
+  | "crop"
+  | "resize"
+  | "sign";
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 
@@ -55,6 +61,38 @@ export type CropMargins = {
   left: number;
 };
 
+export type ResizePreset = "a4" | "letter" | "legal" | "custom";
+export type ResizeMode = "fit" | "fill" | "center";
+
+export type ResizeOptions = {
+  preset: ResizePreset;
+  width: number;
+  height: number;
+  mode: ResizeMode;
+};
+
+export type SignatureMode = "type" | "draw" | "upload";
+
+export type SignatureImage = {
+  file: File;
+  width: number;
+  height: number;
+};
+
+export type SignaturePlacement = {
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+};
+
+export type SignOptions = {
+  mode: SignatureMode;
+  text: string;
+  image?: SignatureImage;
+  placement: SignaturePlacement;
+};
+
 type UtilityBase = {
   file: File;
   totalPages: number;
@@ -81,11 +119,23 @@ export type CropSession = UtilityBase & {
   options: CropMargins[];
 };
 
+export type ResizeSession = UtilityBase & {
+  kind: "resize";
+  options: ResizeOptions;
+};
+
+export type SignSession = UtilityBase & {
+  kind: "sign";
+  options: SignOptions;
+};
+
 export type PdfUtilitySession =
   | OrganizeSession
   | PageNumbersSession
   | WatermarkSession
-  | CropSession;
+  | CropSession
+  | ResizeSession
+  | SignSession;
 
 let _utilitySession: PdfUtilitySession | null = null;
 
@@ -141,6 +191,38 @@ export function createPdfUtilitySession(
     };
   }
 
+  if (kind === "resize") {
+    return {
+      kind,
+      file,
+      totalPages,
+      options: {
+        preset: "a4",
+        width: 595.28,
+        height: 841.89,
+        mode: "fit",
+      },
+    };
+  }
+
+  if (kind === "sign") {
+    return {
+      kind,
+      file,
+      totalPages,
+      options: {
+        mode: "type",
+        text: "",
+        placement: {
+          pageIndex: 0,
+          x: 0.325,
+          y: 0.72,
+          width: 0.35,
+        },
+      },
+    };
+  }
+
   return {
     kind,
     file,
@@ -169,6 +251,8 @@ export function getPdfUtilitySession(
   kind: "watermark",
 ): WatermarkSession | null;
 export function getPdfUtilitySession(kind: "crop"): CropSession | null;
+export function getPdfUtilitySession(kind: "resize"): ResizeSession | null;
+export function getPdfUtilitySession(kind: "sign"): SignSession | null;
 export function getPdfUtilitySession(
   kind: PdfUtilityKind,
 ): PdfUtilitySession | null;

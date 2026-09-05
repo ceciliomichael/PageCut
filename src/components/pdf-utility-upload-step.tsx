@@ -4,6 +4,10 @@ import { AlertCircle, FileText, Loader2, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { PageShell } from "@/components/page-shell";
+import {
+  createExtractImagesSession,
+  setExtractImagesSession,
+} from "@/lib/extract-images-session";
 import { getPageCount, truncateFileName } from "@/lib/pdf-extract";
 import {
   createPdfToImageSession,
@@ -15,7 +19,7 @@ import {
   setPdfUtilitySession,
 } from "@/lib/pdf-utility-session";
 
-type PdfUploadKind = PdfUtilityKind | "pdf-to-image";
+type PdfUploadKind = PdfUtilityKind | "pdf-to-image" | "extract-images";
 
 type UploadState =
   | { kind: "idle" }
@@ -54,6 +58,22 @@ const COPY: Record<
     title: "Upload a PDF to convert",
     description: "Turn PDF pages into lossless PNG images.",
     next: "/pdf-to-image/configure",
+  },
+  "extract-images": {
+    title: "Upload a PDF to extract images",
+    description: "Find and download raster images embedded inside your PDF.",
+    next: "/extract-images/configure",
+  },
+  resize: {
+    title: "Upload a PDF to resize",
+    description:
+      "Put PDF content onto A4, Letter, Legal, or custom page sizes.",
+    next: "/resize/configure",
+  },
+  sign: {
+    title: "Upload a PDF to sign",
+    description: "Type, draw, or upload a signature and place it on your PDF.",
+    next: "/sign/configure",
   },
 };
 
@@ -109,6 +129,13 @@ export default function PdfUtilityUploadStep({
     if (kind === "pdf-to-image") {
       setPdfToImageSession(
         createPdfToImageSession(state.file, state.totalPages),
+      );
+      router.push(copy.next);
+      return;
+    }
+    if (kind === "extract-images") {
+      setExtractImagesSession(
+        createExtractImagesSession(state.file, state.totalPages),
       );
       router.push(copy.next);
       return;

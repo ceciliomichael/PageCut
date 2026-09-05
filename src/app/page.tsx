@@ -8,11 +8,14 @@ import {
   Hash,
   Images,
   ListOrdered,
+  Maximize2,
+  PenLine,
   Scissors,
   Stamp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { clearExtractImagesSession } from "@/lib/extract-images-session";
 import {
   clearImageToPdfSession,
   clearMergeSession,
@@ -30,6 +33,7 @@ export default function HomePage() {
     clearImageToPdfSession();
     clearPdfUtilitySession();
     clearPdfToImageSession();
+    clearExtractImagesSession();
   }, []);
 
   return (
@@ -385,6 +389,108 @@ export default function HomePage() {
             <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
               <p className="text-xs text-[var(--color-text-muted)]">
                 Text · image · opacity
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            id="btn-mode-sign"
+            onClick={() => router.push("/sign")}
+            className="mode-card group flex h-full flex-col p-6"
+          >
+            <div className="mb-4 flex items-start justify-between">
+              <div className="icon-box h-11 w-11">
+                <PenLine
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="mt-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                Sign PDF
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Type, draw, or upload a signature and place it directly on any
+                PDF page.
+              </p>
+            </div>
+            <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Type · draw · upload
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            id="btn-mode-extract-images"
+            onClick={() => router.push("/extract-images")}
+            className="mode-card group flex h-full flex-col p-6"
+          >
+            <div className="mb-4 flex items-start justify-between">
+              <div className="icon-box h-11 w-11">
+                <Images
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="mt-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                Extract Images
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Pull supported embedded raster images out of a PDF as lossless
+                PNG files.
+              </p>
+            </div>
+            <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Embedded raster images · PNG
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            id="btn-mode-resize"
+            onClick={() => router.push("/resize")}
+            className="mode-card group flex h-full flex-col p-6"
+          >
+            <div className="mb-4 flex items-start justify-between">
+              <div className="icon-box h-11 w-11">
+                <Maximize2
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="mt-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                Resize PDF
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Resize pages to A4, Letter, Legal, or custom dimensions with
+                live fit and fill preview.
+              </p>
+            </div>
+            <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Presets · custom size · fit/fill
               </p>
             </div>
           </button>

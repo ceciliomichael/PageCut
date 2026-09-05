@@ -53,6 +53,18 @@ const COPY: Record<
     suffix: "cropped",
     configure: "/crop/configure",
   },
+  resize: {
+    processing: "Resizing PDF pages...",
+    ready: "Your resized PDF is ready",
+    suffix: "resized",
+    configure: "/resize/configure",
+  },
+  sign: {
+    processing: "Adding your signature...",
+    ready: "Your signed PDF is ready",
+    suffix: "signed",
+    configure: "/sign/configure",
+  },
 };
 
 function formatFileSize(bytes: Uint8Array): string {
