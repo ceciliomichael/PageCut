@@ -6,7 +6,7 @@ import { StepBar } from "./step-bar";
 
 type PageShellProps = {
   step: 0 | 1 | 2;
-  mode?: "split" | "merge";
+  mode?: "split" | "merge" | "image";
   children: ReactNode;
   footer?: ReactNode;
   fullHeight?: boolean;

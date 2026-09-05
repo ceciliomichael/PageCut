@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { ArrowRight, GitMerge, Images, Scissors } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Scissors, GitMerge, ArrowRight } from "lucide-react";
-import { clearSession, clearMergeSession } from "@/lib/pdf-session";
+import { useEffect } from "react";
+import {
+  clearImageToPdfSession,
+  clearMergeSession,
+  clearSession,
+} from "@/lib/pdf-session";
 
 export default function HomePage() {
   const router = useRouter();
@@ -11,6 +15,7 @@ export default function HomePage() {
   useEffect(() => {
     clearSession();
     clearMergeSession();
+    clearImageToPdfSession();
   }, []);
 
   return (
@@ -18,7 +23,7 @@ export default function HomePage() {
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12 md:px-6 lg:px-8"
       style={{ background: "var(--color-bg)" }}
     >
-      <div className="w-full max-w-2xl animate-fade-in-up">
+      <div className="w-full max-w-4xl animate-fade-in-up">
         {/* Brand header */}
         <div className="flex items-center gap-2 mb-10 justify-center">
           <span
@@ -51,7 +56,7 @@ export default function HomePage() {
         </div>
 
         {/* Mode cards */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           {/* Split & Extract card */}
           <button
             type="button"
@@ -148,6 +153,56 @@ export default function HomePage() {
                 style={{ color: "var(--color-text-muted)" }}
               >
                 Multiple PDFs → 1 file
+              </p>
+            </div>
+          </button>
+
+          {/* Image to PDF card */}
+          <button
+            type="button"
+            id="btn-mode-image-to-pdf"
+            onClick={() => router.push("/image-to-pdf")}
+            className="mode-card p-6 group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="icon-box h-11 w-11">
+                <Images
+                  size={20}
+                  style={{ color: "var(--color-text-secondary)" }}
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1"
+                style={{ color: "var(--color-text-muted)" }}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <p
+                className="text-base font-semibold"
+                style={{ color: "var(--color-text-primary)" }}
+              >
+                Image to PDF
+              </p>
+              <p
+                className="text-sm leading-5"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Turn JPG, PNG, and WebP images into a single PDF in the order
+                you choose.
+              </p>
+            </div>
+
+            <div
+              className="mt-5 pt-4"
+              style={{ borderTop: "1px solid var(--color-border)" }}
+            >
+              <p
+                className="text-xs"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                Multiple images → 1 PDF
               </p>
             </div>
           </button>

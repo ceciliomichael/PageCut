@@ -19,13 +19,24 @@ const MERGE_STEPS: Step[] = [
   { label: "Merge", description: "Download merged file" },
 ];
 
+const IMAGE_STEPS: Step[] = [
+  { label: "Upload", description: "Add your images" },
+  { label: "Organize", description: "Set page order" },
+  { label: "Convert", description: "Download your PDF" },
+];
+
 type StepBarProps = {
   current: 0 | 1 | 2;
-  mode?: "split" | "merge";
+  mode?: "split" | "merge" | "image";
 };
 
 export function StepBar({ current, mode = "split" }: StepBarProps) {
-  const STEPS = mode === "merge" ? MERGE_STEPS : SPLIT_STEPS;
+  const STEPS =
+    mode === "merge"
+      ? MERGE_STEPS
+      : mode === "image"
+        ? IMAGE_STEPS
+        : SPLIT_STEPS;
 
   return (
     <div className="flex items-center gap-0">
