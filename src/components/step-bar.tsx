@@ -43,6 +43,18 @@ const WATERMARK_STEPS: Step[] = [
   { label: "Save", description: "Download your PDF" },
 ];
 
+const CROP_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Crop", description: "Set crop area" },
+  { label: "Save", description: "Download your PDF" },
+];
+
+const PDF_TO_IMAGE_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Export", description: "Set image options" },
+  { label: "Download", description: "Save your images" },
+];
+
 type StepBarProps = {
   current: 0 | 1 | 2;
   mode?:
@@ -51,7 +63,9 @@ type StepBarProps = {
     | "image"
     | "organize"
     | "page-numbers"
-    | "watermark";
+    | "watermark"
+    | "crop"
+    | "pdf-to-image";
 };
 
 export function StepBar({ current, mode = "split" }: StepBarProps) {
@@ -66,7 +80,11 @@ export function StepBar({ current, mode = "split" }: StepBarProps) {
             ? PAGE_NUMBER_STEPS
             : mode === "watermark"
               ? WATERMARK_STEPS
-              : SPLIT_STEPS;
+              : mode === "crop"
+                ? CROP_STEPS
+                : mode === "pdf-to-image"
+                  ? PDF_TO_IMAGE_STEPS
+                  : SPLIT_STEPS;
 
   return (
     <div className="flex items-center gap-0">

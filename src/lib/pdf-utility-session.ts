@@ -1,4 +1,4 @@
-export type PdfUtilityKind = "organize" | "page-numbers" | "watermark";
+export type PdfUtilityKind = "organize" | "page-numbers" | "watermark" | "crop";
 
 export type QuarterTurn = 0 | 90 | 180 | 270;
 
@@ -29,12 +29,30 @@ export type PageNumberOptions = {
 
 export type WatermarkPosition = "center" | "top" | "bottom";
 
+export type WatermarkMode = "text" | "image";
+
+export type WatermarkImage = {
+  file: File;
+  width: number;
+  height: number;
+};
+
 export type WatermarkOptions = {
+  mode: WatermarkMode;
   text: string;
   fontSize: number;
   opacity: number;
   rotation: number;
   position: WatermarkPosition;
+  image?: WatermarkImage;
+  imageScale: number;
+};
+
+export type CropMargins = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
 };
 
 type UtilityBase = {
@@ -58,10 +76,16 @@ export type WatermarkSession = UtilityBase & {
   options: WatermarkOptions;
 };
 
+export type CropSession = UtilityBase & {
+  kind: "crop";
+  options: CropMargins[];
+};
+
 export type PdfUtilitySession =
   | OrganizeSession
   | PageNumbersSession
-  | WatermarkSession;
+  | WatermarkSession
+  | CropSession;
 
 let _utilitySession: PdfUtilitySession | null = null;
 
@@ -103,16 +127,32 @@ export function createPdfUtilitySession(
     };
   }
 
+  if (kind === "crop") {
+    return {
+      kind,
+      file,
+      totalPages,
+      options: Array.from({ length: totalPages }, () => ({
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+      })),
+    };
+  }
+
   return {
     kind,
     file,
     totalPages,
     options: {
+      mode: "text",
       text: "CONFIDENTIAL",
       fontSize: 42,
       opacity: 0.2,
       rotation: -35,
       position: "center",
+      imageScale: 0.3,
     },
   };
 }
@@ -128,6 +168,7 @@ export function getPdfUtilitySession(
 export function getPdfUtilitySession(
   kind: "watermark",
 ): WatermarkSession | null;
+export function getPdfUtilitySession(kind: "crop"): CropSession | null;
 export function getPdfUtilitySession(
   kind: PdfUtilityKind,
 ): PdfUtilitySession | null;

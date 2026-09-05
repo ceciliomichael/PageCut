@@ -10,22 +10,22 @@
     "format": "biome format --write"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.2.2",
-    "lucide-react": "^1.16.0",
-    "next": "16.2.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "lucide-react": "^1.41.0",
+    "next": "16.3.4",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.3.289",
-    "postcss": "^8.5.8",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "tailwindcss": "^4.2.2"
+    "postcss": "^8.5.28",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@biomejs/biome": "2.5.12",
+    "@types/node": "^26",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
     "babel-plugin-react-compiler": "1.0.0",
-    "typescript": "^5"
+    "typescript": "^7"
   }
 }

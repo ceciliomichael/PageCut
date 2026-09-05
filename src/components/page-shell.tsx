@@ -12,7 +12,9 @@ type PageShellProps = {
     | "image"
     | "organize"
     | "page-numbers"
-    | "watermark";
+    | "watermark"
+    | "crop"
+    | "pdf-to-image";
   children: ReactNode;
   footer?: ReactNode;
   fullHeight?: boolean;

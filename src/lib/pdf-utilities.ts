@@ -6,7 +6,10 @@ import {
   rgb,
   StandardFonts,
 } from "pdf-lib";
+import { embedImageFile } from "./image-to-pdf";
 import type {
+  CropMargins,
+  CropSession,
   OrganizeSession,
   PageNumberOptions,
   PageNumbersSession,
@@ -117,6 +120,52 @@ function drawWatermark(
   });
 }
 
+function validateCropMargins(options: CropMargins): void {
+  const values = [options.top, options.right, options.bottom, options.left];
+  if (
+    values.some((value) => !Number.isFinite(value) || value < 0 || value > 0.99)
+  ) {
+    throw new Error("Crop margins must be between 0% and 99%.");
+  }
+  if (
+    options.left + options.right > 0.99 ||
+    options.top + options.bottom > 0.99
+  ) {
+    throw new Error("Crop margins must leave at least 1% of the page visible.");
+  }
+}
+
+function imageWatermarkPoint(
+  page: PDFPage,
+  width: number,
+  height: number,
+  position: WatermarkOptions["position"],
+): { x: number; y: number } {
+  const pageSize = page.getSize();
+  const x = (pageSize.width - width) / 2;
+  if (position === "top") return { x, y: pageSize.height - height - 36 };
+  if (position === "bottom") return { x, y: 36 };
+  return { x, y: (pageSize.height - height) / 2 };
+}
+
+function imageWatermarkRotatedPoint(
+  point: { x: number; y: number },
+  width: number,
+  height: number,
+  rotation: number,
+): { x: number; y: number } {
+  const radians = (rotation * Math.PI) / 180;
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  const centerX = point.x + width / 2;
+  const centerY = point.y + height / 2;
+
+  return {
+    x: centerX - (cosine * width) / 2 + (sine * height) / 2,
+    y: centerY - (sine * width) / 2 - (cosine * height) / 2,
+  };
+}
+
 async function organizePdf(
   session: OrganizeSession,
 ): Promise<PdfUtilityResult> {
@@ -179,10 +228,40 @@ async function addWatermark(
   const document = await PDFDocument.load(await session.file.arrayBuffer(), {
     ignoreEncryption: false,
   });
-  const font = await document.embedFont(StandardFonts.HelveticaBold);
+  const { options } = session;
 
-  for (const page of document.getPages()) {
-    drawWatermark(page, font, session.options);
+  if (options.mode === "image") {
+    if (!options.image) throw new Error("Choose an image watermark first.");
+    const image = await embedImageFile(document, options.image.file);
+    for (const page of document.getPages()) {
+      const pageWidth = page.getSize().width;
+      const width = pageWidth * options.imageScale;
+      const height = width * (image.height / image.width);
+      const basePoint = imageWatermarkPoint(
+        page,
+        width,
+        height,
+        options.position,
+      );
+      const point = imageWatermarkRotatedPoint(
+        basePoint,
+        width,
+        height,
+        options.rotation,
+      );
+      page.drawImage(image, {
+        ...point,
+        width,
+        height,
+        opacity: options.opacity,
+        rotate: degrees(options.rotation),
+      });
+    }
+  } else {
+    const font = await document.embedFont(StandardFonts.HelveticaBold);
+    for (const page of document.getPages()) {
+      drawWatermark(page, font, options);
+    }
   }
 
   return {
@@ -192,10 +271,40 @@ async function addWatermark(
   };
 }
 
+async function cropPdf(session: CropSession): Promise<PdfUtilityResult> {
+  const document = await PDFDocument.load(await session.file.arrayBuffer(), {
+    ignoreEncryption: false,
+  });
+  const pages = document.getPages();
+  if (session.options.length !== pages.length) {
+    throw new Error("Crop settings do not match the number of PDF pages.");
+  }
+
+  for (let pageIndex = 0; pageIndex < pages.length; pageIndex += 1) {
+    const page = pages[pageIndex];
+    const options = session.options[pageIndex];
+    if (!page || !options) continue;
+    validateCropMargins(options);
+    const box = page.getCropBox();
+    const x = box.x + box.width * options.left;
+    const y = box.y + box.height * options.bottom;
+    const width = box.width * (1 - options.left - options.right);
+    const height = box.height * (1 - options.top - options.bottom);
+    page.setCropBox(x, y, width, height);
+  }
+
+  return {
+    bytes: await document.save(),
+    totalPages: document.getPageCount(),
+    summary: `Cropped ${document.getPageCount()} ${document.getPageCount() === 1 ? "page" : "pages"}`,
+  };
+}
+
 export async function processPdfUtility(
   session: PdfUtilitySession,
 ): Promise<PdfUtilityResult> {
   if (session.kind === "organize") return organizePdf(session);
   if (session.kind === "page-numbers") return addPageNumbers(session);
+  if (session.kind === "crop") return cropPdf(session);
   return addWatermark(session);
 }

@@ -5,6 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PageRange } from "@/lib/pdf-extract";
 import type {
+  CropMargins,
   PageNumberOptions,
   PdfUtilitySession,
   QuarterTurn,
@@ -48,6 +49,7 @@ type PreviewPageSpec = {
   outputIndex: number;
   marker?: string;
   marked?: boolean;
+  allowOverlayOverflow?: boolean;
 };
 
 type PageInfo = {
@@ -74,10 +76,32 @@ type ImagePreviewItem = {
 
 const MAX_PAGE_WIDTH = 820;
 const MAX_CSS_SCALE = 1.3;
+const DEFAULT_CROP_PREVIEW_MARGINS: CropMargins = {
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+};
 const documentCache = new WeakMap<File, Promise<PdfDocumentProxy>>();
 
 function normalizeRotation(rotation: number): number {
   return ((rotation % 360) + 360) % 360;
+}
+
+function useObjectUrl(file?: File): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  return url;
 }
 
 function loadPdfDocument(file: File): Promise<PdfDocumentProxy> {
@@ -163,16 +187,45 @@ function PageNumberOverlay({
 function WatermarkOverlay({
   options,
   scale,
+  imageUrl,
 }: {
   options: WatermarkOptions;
   scale: number;
+  imageUrl?: string | null;
 }) {
-  if (!options.text.trim()) return null;
-
-  const fontSize = Number.isFinite(options.fontSize) ? options.fontSize : 42;
   const opacity = Number.isFinite(options.opacity) ? options.opacity : 0.2;
   const rotation = Number.isFinite(options.rotation) ? options.rotation : 0;
   const edge = 36 * scale;
+
+  if (options.mode === "image") {
+    if (!imageUrl || !options.image) return null;
+    const style: CSSProperties = {
+      position: "absolute",
+      left: "50%",
+      width: `${Math.min(0.8, Math.max(0.1, options.imageScale)) * 100}%`,
+      height: "auto",
+      opacity: Math.min(1, Math.max(0.05, opacity)),
+      pointerEvents: "none",
+      transformOrigin: "center",
+    };
+    if (options.position === "top") {
+      style.top = `${edge}px`;
+      style.transform = `translateX(-50%) rotate(${-rotation}deg)`;
+    } else if (options.position === "bottom") {
+      style.bottom = `${edge}px`;
+      style.transform = `translateX(-50%) rotate(${-rotation}deg)`;
+    } else {
+      style.top = "50%";
+      style.transform = `translate(-50%, -50%) rotate(${-rotation}deg)`;
+    }
+    return (
+      // biome-ignore lint/performance/noImgElement: local blob preview should not use Next image optimization
+      <img src={imageUrl} alt="" style={style} />
+    );
+  }
+
+  if (!options.text.trim()) return null;
+  const fontSize = Number.isFinite(options.fontSize) ? options.fontSize : 42;
   const style: CSSProperties = {
     position: "absolute",
     left: "50%",
@@ -199,6 +252,194 @@ function WatermarkOverlay({
   }
 
   return <span style={style}>{options.text}</span>;
+}
+
+type CropGesture = "move" | "nw" | "ne" | "sw" | "se";
+
+function clampCropMargins(
+  margins: CropMargins,
+  gesture: CropGesture,
+): CropMargins {
+  const clamp = (value: number) => Math.min(0.99, Math.max(0, value));
+  let left = clamp(margins.left);
+  let right = clamp(margins.right);
+  let top = clamp(margins.top);
+  let bottom = clamp(margins.bottom);
+
+  if (left + right > 0.99) {
+    if (gesture === "nw" || gesture === "sw") left = 0.99 - right;
+    else right = 0.99 - left;
+  }
+  if (top + bottom > 0.99) {
+    if (gesture === "nw" || gesture === "ne") top = 0.99 - bottom;
+    else bottom = 0.99 - top;
+  }
+
+  return { top, right, bottom, left };
+}
+
+function CropOverlay({
+  margins,
+  active,
+  onSelect,
+  onChange,
+}: {
+  margins: CropMargins;
+  active: boolean;
+  onSelect: () => void;
+  onChange: (margins: CropMargins) => void;
+}) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const gestureRef = useRef<{
+    type: CropGesture;
+    x: number;
+    y: number;
+    start: CropMargins;
+  } | null>(null);
+
+  function startGesture(
+    event: React.PointerEvent<HTMLElement>,
+    type: CropGesture,
+  ) {
+    if (!active) {
+      event.preventDefault();
+      event.stopPropagation();
+      onSelect();
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    gestureRef.current = {
+      type,
+      x: event.clientX,
+      y: event.clientY,
+      start: margins,
+    };
+  }
+
+  function moveGesture(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = gestureRef.current;
+    const root = rootRef.current;
+    if (!gesture || !root) return;
+    const rect = root.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dx = (event.clientX - gesture.x) / rect.width;
+    const dy = (event.clientY - gesture.y) / rect.height;
+    const next = { ...gesture.start };
+
+    if (gesture.type === "move") {
+      const horizontal = Math.min(
+        gesture.start.right,
+        Math.max(-gesture.start.left, dx),
+      );
+      const vertical = Math.min(
+        gesture.start.bottom,
+        Math.max(-gesture.start.top, dy),
+      );
+      next.left += horizontal;
+      next.right -= horizontal;
+      next.top += vertical;
+      next.bottom -= vertical;
+    } else {
+      if (gesture.type.includes("w")) next.left += dx;
+      if (gesture.type.includes("e")) next.right -= dx;
+      if (gesture.type.includes("n")) next.top += dy;
+      if (gesture.type.includes("s")) next.bottom -= dy;
+    }
+    onChange(clampCropMargins(next, gesture.type));
+  }
+
+  const cropStyle: CSSProperties = {
+    left: `${margins.left * 100}%`,
+    right: `${margins.right * 100}%`,
+    top: `${margins.top * 100}%`,
+    bottom: `${margins.bottom * 100}%`,
+  };
+
+  const handleClass =
+    "absolute z-40 h-4 w-4 rounded-full border-2 border-[var(--color-accent)] bg-white shadow-sm";
+
+  return (
+    <div
+      ref={rootRef}
+      className={`absolute inset-0 z-20 touch-none ${active ? "" : "cursor-pointer"}`}
+      onPointerDown={(event) => {
+        if (!active) {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      onPointerMove={moveGesture}
+      onPointerUp={() => {
+        gestureRef.current = null;
+      }}
+      onPointerCancel={() => {
+        gestureRef.current = null;
+      }}
+    >
+      <div
+        className="absolute left-0 right-0 top-0 bg-black/35"
+        style={{ height: `${margins.top * 100}%` }}
+      />
+      <div
+        className="absolute bottom-0 left-0 right-0 bg-black/35"
+        style={{ height: `${margins.bottom * 100}%` }}
+      />
+      <div
+        className="absolute left-0 bg-black/35"
+        style={{
+          top: `${margins.top * 100}%`,
+          bottom: `${margins.bottom * 100}%`,
+          width: `${margins.left * 100}%`,
+        }}
+      />
+      <div
+        className="absolute right-0 bg-black/35"
+        style={{
+          top: `${margins.top * 100}%`,
+          bottom: `${margins.bottom * 100}%`,
+          width: `${margins.right * 100}%`,
+        }}
+      />
+      <div
+        className={`absolute z-20 border-[var(--color-accent)] ${
+          active ? "cursor-move border-2" : "cursor-pointer border opacity-70"
+        }`}
+        style={cropStyle}
+        onPointerDown={(event) => startGesture(event, "move")}
+      >
+        {active && (
+          <>
+            <button
+              type="button"
+              aria-label="Resize crop from top left"
+              className={`${handleClass} -left-2 -top-2 cursor-nwse-resize`}
+              onPointerDown={(event) => startGesture(event, "nw")}
+            />
+            <button
+              type="button"
+              aria-label="Resize crop from top right"
+              className={`${handleClass} -right-2 -top-2 cursor-nesw-resize`}
+              onPointerDown={(event) => startGesture(event, "ne")}
+            />
+            <button
+              type="button"
+              aria-label="Resize crop from bottom left"
+              className={`${handleClass} -bottom-2 -left-2 cursor-nesw-resize`}
+              onPointerDown={(event) => startGesture(event, "sw")}
+            />
+            <button
+              type="button"
+              aria-label="Resize crop from bottom right"
+              className={`${handleClass} -bottom-2 -right-2 cursor-nwse-resize`}
+              onPointerDown={(event) => startGesture(event, "se")}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function PdfCanvasPage({
@@ -325,35 +566,37 @@ function PdfCanvasPage({
     <div className="flex justify-center px-4 sm:px-5 md:px-6">
       <div
         ref={wrapperRef}
-        className={`relative overflow-hidden bg-white shadow-[0_4px_18px_rgba(0,0,0,0.10)] sm:shadow-[0_8px_28px_rgba(0,0,0,0.10)] ${
-          spec.marked
-            ? "ring-2 ring-[var(--color-accent)]"
-            : "ring-1 ring-black/8"
-        }`}
+        className="relative overflow-visible"
         style={{
           width: "100%",
           maxWidth: `${width}px`,
           aspectRatio: `${width} / ${height}`,
         }}
       >
-        <canvas
-          ref={canvasRef}
-          className={`absolute inset-0 h-full w-full transition-opacity duration-150 ${
-            rendered ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        {!rendered && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white">
-            <Loader2 size={18} className="animate-spin-slow text-neutral-400" />
-          </div>
-        )}
-        {renderOverlay?.(spec, actualScale)}
+        <div className="absolute inset-0 overflow-hidden bg-white shadow-[0_4px_18px_rgba(0,0,0,0.10)] sm:shadow-[0_8px_28px_rgba(0,0,0,0.10)]">
+          <canvas
+            ref={canvasRef}
+            className={`absolute inset-0 z-0 h-full w-full transition-opacity duration-150 ${
+              rendered ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          {!rendered && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
+              <Loader2
+                size={18}
+                className="animate-spin-slow text-neutral-400"
+              />
+            </div>
+          )}
+          {!spec.allowOverlayOverflow && renderOverlay?.(spec, actualScale)}
+        </div>
+        {spec.allowOverlayOverflow && renderOverlay?.(spec, actualScale)}
         {spec.marker && (
-          <span className="pointer-events-none absolute left-2 top-2 rounded bg-black/70 px-2 py-1 text-[10px] font-semibold text-white/95">
+          <span className="pointer-events-none absolute left-2 top-2 z-30 rounded bg-black/70 px-2 py-1 text-[10px] font-semibold text-white/95">
             {spec.marker}
           </span>
         )}
-        <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white/90">
+        <span className="pointer-events-none absolute bottom-2 right-2 z-30 rounded bg-black/55 px-1.5 py-0.5 text-[10px] font-medium text-white/90">
           {spec.outputIndex + 1}
         </span>
       </div>
@@ -507,6 +750,11 @@ export function PdfLivePreview({
   session: PdfUtilitySession;
   pageCount: number;
 }) {
+  const watermarkImageFile =
+    session.kind === "watermark" && session.options.mode === "image"
+      ? session.options.image?.file
+      : undefined;
+  const watermarkImageUrl = useObjectUrl(watermarkImageFile);
   const pages = useMemo<PreviewPageSpec[]>(() => {
     if (session.kind === "organize") {
       return session.pages.map((page, outputIndex) => ({
@@ -535,7 +783,11 @@ export function PdfLivePreview({
         scale={scale}
       />
     ) : session.kind === "watermark" ? (
-      <WatermarkOverlay options={session.options} scale={scale} />
+      <WatermarkOverlay
+        options={session.options}
+        scale={scale}
+        imageUrl={watermarkImageUrl}
+      />
     ) : null;
 
   return (
@@ -543,6 +795,95 @@ export function PdfLivePreview({
       pages={pages}
       pageCount={pageCount}
       renderOverlay={renderOverlay}
+    />
+  );
+}
+
+export function PdfRangeLivePreview({
+  file,
+  totalPages,
+  fromPage,
+  toPage,
+  title = "Source preview",
+}: {
+  file: File;
+  totalPages: number;
+  fromPage: number;
+  toPage: number;
+  title?: string;
+}) {
+  const valid =
+    Number.isInteger(fromPage) &&
+    Number.isInteger(toPage) &&
+    fromPage >= 1 &&
+    toPage <= totalPages &&
+    fromPage <= toPage;
+  const pages = useMemo<PreviewPageSpec[]>(
+    () =>
+      Array.from({ length: totalPages }, (_, sourceIndex) => {
+        const pageNumber = sourceIndex + 1;
+        const selected =
+          valid && pageNumber >= fromPage && pageNumber <= toPage;
+        return {
+          id: `range-page-${sourceIndex}`,
+          file,
+          sourceIndex,
+          rotation: 0,
+          outputIndex: sourceIndex,
+          marked: selected,
+          marker: selected ? "Export" : undefined,
+        };
+      }),
+    [file, fromPage, toPage, totalPages, valid],
+  );
+
+  return (
+    <PdfPreviewSurface pages={pages} pageCount={totalPages} title={title} />
+  );
+}
+
+export function CropLivePreview({
+  file,
+  totalPages,
+  margins,
+  selectedPage,
+  onSelectPage,
+  onChange,
+}: {
+  file: File;
+  totalPages: number;
+  margins: CropMargins[];
+  selectedPage: number;
+  onSelectPage: (pageIndex: number) => void;
+  onChange: (pageIndex: number, margins: CropMargins) => void;
+}) {
+  const pages = useMemo<PreviewPageSpec[]>(
+    () =>
+      Array.from({ length: totalPages }, (_, sourceIndex) => ({
+        id: `crop-page-${sourceIndex}`,
+        file,
+        sourceIndex,
+        rotation: 0,
+        outputIndex: sourceIndex,
+        marker: sourceIndex === selectedPage ? "Editing" : undefined,
+        allowOverlayOverflow: true,
+      })),
+    [file, selectedPage, totalPages],
+  );
+
+  return (
+    <PdfPreviewSurface
+      pages={pages}
+      pageCount={totalPages}
+      title="Crop preview"
+      renderOverlay={(spec) => (
+        <CropOverlay
+          margins={margins[spec.sourceIndex] ?? DEFAULT_CROP_PREVIEW_MARGINS}
+          active={spec.sourceIndex === selectedPage}
+          onSelect={() => onSelectPage(spec.sourceIndex)}
+          onChange={(next) => onChange(spec.sourceIndex, next)}
+        />
+      )}
     />
   );
 }
@@ -687,7 +1028,7 @@ function ImagePreviewPage({
   return (
     <div className="flex justify-center px-4 sm:px-5 md:px-6">
       <div
-        className="relative overflow-hidden bg-white shadow-[0_4px_18px_rgba(0,0,0,0.10)] ring-1 ring-black/8 sm:shadow-[0_8px_28px_rgba(0,0,0,0.10)]"
+        className="relative overflow-hidden bg-white shadow-[0_4px_18px_rgba(0,0,0,0.10)] sm:shadow-[0_8px_28px_rgba(0,0,0,0.10)]"
         style={{
           width: "100%",
           maxWidth: `${width}px`,

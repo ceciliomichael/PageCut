@@ -6,10 +6,16 @@ import { useRef, useState } from "react";
 import { PageShell } from "@/components/page-shell";
 import { getPageCount, truncateFileName } from "@/lib/pdf-extract";
 import {
+  createPdfToImageSession,
+  setPdfToImageSession,
+} from "@/lib/pdf-to-image-session";
+import {
   createPdfUtilitySession,
   type PdfUtilityKind,
   setPdfUtilitySession,
 } from "@/lib/pdf-utility-session";
+
+type PdfUploadKind = PdfUtilityKind | "pdf-to-image";
 
 type UploadState =
   | { kind: "idle" }
@@ -19,7 +25,7 @@ type UploadState =
   | { kind: "error"; message: string };
 
 const COPY: Record<
-  PdfUtilityKind,
+  PdfUploadKind,
   { title: string; description: string; next: string }
 > = {
   organize: {
@@ -34,8 +40,20 @@ const COPY: Record<
   },
   watermark: {
     title: "Upload a PDF to watermark",
-    description: "Apply a text watermark across every page of your PDF.",
+    description:
+      "Apply a text or image watermark across every page of your PDF.",
     next: "/watermark/configure",
+  },
+  crop: {
+    title: "Upload a PDF to crop",
+    description:
+      "Trim page edges while keeping the original PDF content sharp.",
+    next: "/crop/configure",
+  },
+  "pdf-to-image": {
+    title: "Upload a PDF to convert",
+    description: "Turn PDF pages into lossless PNG images.",
+    next: "/pdf-to-image/configure",
   },
 };
 
@@ -48,7 +66,7 @@ function formatFileSize(bytes: number): string {
 export default function PdfUtilityUploadStep({
   kind,
 }: {
-  kind: PdfUtilityKind;
+  kind: PdfUploadKind;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,6 +106,13 @@ export default function PdfUtilityUploadStep({
 
   function handleContinue() {
     if (state.kind !== "ready") return;
+    if (kind === "pdf-to-image") {
+      setPdfToImageSession(
+        createPdfToImageSession(state.file, state.totalPages),
+      );
+      router.push(copy.next);
+      return;
+    }
     setPdfUtilitySession(
       createPdfUtilitySession(kind, state.file, state.totalPages),
     );

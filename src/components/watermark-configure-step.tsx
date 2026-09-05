@@ -1,13 +1,15 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, FileImage, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell } from "@/components/page-shell";
 import { PdfEditorWorkspace } from "@/components/pdf-editor-workspace";
+import { isSupportedImageFile, readImageDimensions } from "@/lib/image-to-pdf";
 import {
   getPdfUtilitySession,
   setPdfUtilitySession,
+  type WatermarkMode,
   type WatermarkPosition,
 } from "@/lib/pdf-utility-session";
 
@@ -17,12 +19,19 @@ const POSITIONS: Array<{ value: WatermarkPosition; label: string }> = [
   { value: "bottom", label: "Bottom" },
 ];
 
+const MODES: Array<{ value: WatermarkMode; label: string }> = [
+  { value: "text", label: "Text" },
+  { value: "image", label: "Image" },
+];
+
 export default function WatermarkConfigureStep() {
   const router = useRouter();
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const session = getPdfUtilitySession("watermark");
   const [options, setOptions] = useState(() => session?.options ?? null);
   const [outputName, setOutputName] = useState(session?.outputName ?? "");
   const [error, setError] = useState<string | null>(null);
+  const [readingImage, setReadingImage] = useState(false);
 
   useEffect(() => {
     if (!session) router.replace("/watermark");
@@ -40,14 +49,45 @@ export default function WatermarkConfigureStep() {
   const activeSession = session;
   const activeOptions = options;
 
-  function savePdf() {
-    if (!activeOptions.text.trim()) {
-      setError("Enter watermark text.");
+  async function chooseImage(file: File) {
+    if (!isSupportedImageFile(file)) {
+      setError("Choose a JPG, PNG, or WebP image.");
       return;
     }
-    if (activeOptions.fontSize < 10 || activeOptions.fontSize > 120) {
-      setError("Font size must be between 10 and 120.");
-      return;
+    setReadingImage(true);
+    setError(null);
+    try {
+      const dimensions = await readImageDimensions(file);
+      setOptions({
+        ...activeOptions,
+        image: { file, ...dimensions },
+      });
+    } catch {
+      setError("Could not read this image.");
+    } finally {
+      setReadingImage(false);
+    }
+  }
+
+  function savePdf() {
+    if (activeOptions.mode === "text") {
+      if (!activeOptions.text.trim()) {
+        setError("Enter watermark text.");
+        return;
+      }
+      if (activeOptions.fontSize < 10 || activeOptions.fontSize > 120) {
+        setError("Font size must be between 10 and 120.");
+        return;
+      }
+    } else {
+      if (!activeOptions.image) {
+        setError("Choose an image watermark.");
+        return;
+      }
+      if (activeOptions.imageScale < 0.1 || activeOptions.imageScale > 0.8) {
+        setError("Image size must be between 10% and 80%.");
+        return;
+      }
     }
     if (activeOptions.opacity < 0.05 || activeOptions.opacity > 1) {
       setError("Opacity must be between 5% and 100%.");
@@ -56,7 +96,13 @@ export default function WatermarkConfigureStep() {
 
     setPdfUtilitySession({
       ...activeSession,
-      options: { ...activeOptions, text: activeOptions.text.trim() },
+      options: {
+        ...activeOptions,
+        text:
+          activeOptions.mode === "text"
+            ? activeOptions.text.trim()
+            : activeOptions.text,
+      },
       outputName: outputName.trim() || undefined,
     });
     router.push("/watermark/results");
@@ -66,7 +112,7 @@ export default function WatermarkConfigureStep() {
     <PageShell step={1} mode="watermark" fullHeight wide>
       <PdfEditorWorkspace
         title="Add watermark"
-        description="Adjust the watermark and inspect every page in the live document."
+        description="Add text or an image and inspect every page instantly in the live document."
         fileName={activeSession.file.name}
         pageCount={activeSession.totalPages}
         previewSession={previewSession}
@@ -87,19 +133,97 @@ export default function WatermarkConfigureStep() {
         )}
 
         <section>
-          <label className="block text-xs font-medium text-[var(--color-text-secondary)]">
-            Watermark text
-            <input
-              className="input-field mt-1.5"
-              value={options.text}
-              onChange={(event) =>
-                setOptions({ ...options, text: event.target.value })
-              }
-              maxLength={120}
-              placeholder="CONFIDENTIAL"
-            />
-          </label>
+          <h2 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">
+            Watermark type
+          </h2>
+          <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-[var(--color-bg-subtle)] p-1">
+            {MODES.map((mode) => {
+              const active = options.mode === mode.value;
+              return (
+                <button
+                  key={mode.value}
+                  type="button"
+                  onClick={() => {
+                    setOptions({ ...options, mode: mode.value });
+                    setError(null);
+                  }}
+                  className={`h-9 rounded-md text-xs font-medium transition-colors ${
+                    active
+                      ? "bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              );
+            })}
+          </div>
         </section>
+
+        {options.mode === "text" ? (
+          <section className="border-t border-[var(--color-border)] pt-5">
+            <label className="block text-xs font-medium text-[var(--color-text-secondary)]">
+              Watermark text
+              <input
+                className="input-field mt-1.5"
+                value={options.text}
+                onChange={(event) =>
+                  setOptions({ ...options, text: event.target.value })
+                }
+                maxLength={120}
+                placeholder="CONFIDENTIAL"
+              />
+            </label>
+          </section>
+        ) : (
+          <section className="border-t border-[var(--color-border)] pt-5">
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+              className="sr-only"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) await chooseImage(file);
+              }}
+            />
+            {options.image ? (
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-3">
+                <div className="flex items-center gap-3">
+                  <div className="icon-box h-9 w-9 shrink-0">
+                    <FileImage size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-[var(--color-text-primary)]">
+                      {options.image.file.name}
+                    </p>
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      {options.image.width} × {options.image.height}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="btn-secondary h-8 px-2.5 text-xs"
+                  >
+                    Replace
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={readingImage}
+                onClick={() => imageInputRef.current?.click()}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] px-4 py-6 text-sm font-medium text-[var(--color-text-secondary)] disabled:opacity-50"
+              >
+                <Upload size={16} />
+                {readingImage ? "Reading image..." : "Choose watermark image"}
+              </button>
+            )}
+          </section>
+        )}
 
         <section className="border-t border-[var(--color-border)] pt-5">
           <h2 className="mb-3 text-sm font-semibold text-[var(--color-text-primary)]">
@@ -133,22 +257,46 @@ export default function WatermarkConfigureStep() {
             Appearance
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            <label className="text-xs font-medium text-[var(--color-text-secondary)]">
-              Font size
-              <input
-                type="number"
-                min={10}
-                max={120}
-                className="input-field mt-1.5"
-                value={options.fontSize}
-                onChange={(event) =>
-                  setOptions({
-                    ...options,
-                    fontSize: Number(event.target.value),
-                  })
-                }
-              />
-            </label>
+            {options.mode === "text" ? (
+              <label className="text-xs font-medium text-[var(--color-text-secondary)]">
+                Font size
+                <input
+                  type="number"
+                  min={10}
+                  max={120}
+                  className="input-field mt-1.5"
+                  value={options.fontSize}
+                  onChange={(event) =>
+                    setOptions({
+                      ...options,
+                      fontSize: Number(event.target.value),
+                    })
+                  }
+                />
+              </label>
+            ) : (
+              <label className="text-xs font-medium text-[var(--color-text-secondary)]">
+                Image size
+                <div className="relative mt-1.5 flex items-center">
+                  <input
+                    type="number"
+                    min={10}
+                    max={80}
+                    className="input-field pr-8"
+                    value={Math.round(options.imageScale * 100)}
+                    onChange={(event) =>
+                      setOptions({
+                        ...options,
+                        imageScale: Number(event.target.value) / 100,
+                      })
+                    }
+                  />
+                  <span className="pointer-events-none absolute right-3 text-xs text-[var(--color-text-muted)]">
+                    %
+                  </span>
+                </div>
+              </label>
+            )}
             <label className="text-xs font-medium text-[var(--color-text-secondary)]">
               Rotation
               <input

@@ -2,6 +2,8 @@
 
 import {
   ArrowRight,
+  Crop,
+  FileImage,
   GitMerge,
   Hash,
   Images,
@@ -16,6 +18,7 @@ import {
   clearMergeSession,
   clearSession,
 } from "@/lib/pdf-session";
+import { clearPdfToImageSession } from "@/lib/pdf-to-image-session";
 import { clearPdfUtilitySession } from "@/lib/pdf-utility-session";
 
 export default function HomePage() {
@@ -26,6 +29,7 @@ export default function HomePage() {
     clearMergeSession();
     clearImageToPdfSession();
     clearPdfUtilitySession();
+    clearPdfToImageSession();
   }, []);
 
   return (
@@ -113,6 +117,40 @@ export default function HomePage() {
                 style={{ color: "var(--color-text-muted)" }}
               >
                 1 PDF → multiple files
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            id="btn-mode-pdf-to-image"
+            onClick={() => router.push("/pdf-to-image")}
+            className="mode-card group flex h-full flex-col p-6"
+          >
+            <div className="mb-4 flex items-start justify-between">
+              <div className="icon-box h-11 w-11">
+                <FileImage
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="mt-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                PDF to PNG
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Export PDF pages as lossless PNG images with range and
+                resolution controls.
+              </p>
+            </div>
+            <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Lossless PNG · page range
               </p>
             </div>
           </button>
@@ -252,6 +290,40 @@ export default function HomePage() {
 
           <button
             type="button"
+            id="btn-mode-crop"
+            onClick={() => router.push("/crop")}
+            className="mode-card group flex h-full flex-col p-6"
+          >
+            <div className="mb-4 flex items-start justify-between">
+              <div className="icon-box h-11 w-11">
+                <Crop
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="mt-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                Crop PDF
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Trim page edges with a draggable live crop frame or precise
+                margins.
+              </p>
+            </div>
+            <div className="mt-5 border-t border-[var(--color-border)] pt-4">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Drag · margins · vector-safe
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
             id="btn-mode-page-numbers"
             onClick={() => router.push("/page-numbers")}
             className="mode-card group flex h-full flex-col p-6"
@@ -306,12 +378,13 @@ export default function HomePage() {
                 Add Watermark
               </p>
               <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
-                Apply a customizable text watermark across the entire PDF.
+                Apply customizable text or image watermarks across the entire
+                PDF.
               </p>
             </div>
             <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
               <p className="text-xs text-[var(--color-text-muted)]">
-                Text · opacity · rotation
+                Text · image · opacity
               </p>
             </div>
           </button>

@@ -47,6 +47,12 @@ const COPY: Record<
     suffix: "watermarked",
     configure: "/watermark/configure",
   },
+  crop: {
+    processing: "Cropping your PDF...",
+    ready: "Your cropped PDF is ready",
+    suffix: "cropped",
+    configure: "/crop/configure",
+  },
 };
 
 function formatFileSize(bytes: Uint8Array): string {

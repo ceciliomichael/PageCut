@@ -72,6 +72,32 @@ async function convertWebpToPng(file: File): Promise<Uint8Array> {
   }
 }
 
+export async function embedImageFile(
+  document: PDFDocument,
+  file: File,
+): Promise<PDFImage> {
+  if (!isSupportedImageFile(file)) {
+    throw new Error(`Unsupported image format: "${file.name}".`);
+  }
+
+  const fileName = file.name.toLowerCase();
+  const fileType = file.type.toLowerCase();
+
+  if (fileType === "image/png" || fileName.endsWith(".png")) {
+    return document.embedPng(await file.arrayBuffer());
+  }
+
+  if (
+    fileType === "image/jpeg" ||
+    fileName.endsWith(".jpg") ||
+    fileName.endsWith(".jpeg")
+  ) {
+    return document.embedJpg(await file.arrayBuffer());
+  }
+
+  return document.embedPng(await convertWebpToPng(file));
+}
+
 function fitPageSize(width: number, height: number): [number, number] {
   const largest = Math.max(width, height);
   if (largest <= MAX_PDF_PAGE_DIMENSION) return [width, height];
@@ -91,27 +117,7 @@ export async function createPdfFromImages(
   const sources: ImagePdfResult["sources"] = [];
 
   for (const item of items) {
-    if (!isSupportedImageFile(item.file)) {
-      throw new Error(`Unsupported image format: "${item.file.name}".`);
-    }
-
-    const fileName = item.file.name.toLowerCase();
-    const fileType = item.file.type.toLowerCase();
-    let embeddedImage: PDFImage;
-
-    if (fileType === "image/png" || fileName.endsWith(".png")) {
-      embeddedImage = await document.embedPng(await item.file.arrayBuffer());
-    } else if (
-      fileType === "image/jpeg" ||
-      fileName.endsWith(".jpg") ||
-      fileName.endsWith(".jpeg")
-    ) {
-      embeddedImage = await document.embedJpg(await item.file.arrayBuffer());
-    } else {
-      embeddedImage = await document.embedPng(
-        await convertWebpToPng(item.file),
-      );
-    }
+    const embeddedImage = await embedImageFile(document, item.file);
 
     const [pageWidth, pageHeight] = fitPageSize(
       embeddedImage.width,
