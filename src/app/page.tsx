@@ -72,7 +72,7 @@ export default function HomePage() {
             type="button"
             id="btn-mode-split"
             onClick={() => router.push("/split")}
-            className="mode-card p-6 group"
+            className="mode-card group flex h-full flex-col p-6"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="icon-box h-11 w-11">
@@ -88,7 +88,7 @@ export default function HomePage() {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex-1 space-y-1.5">
               <p
                 className="text-base font-semibold"
                 style={{ color: "var(--color-text-primary)" }}
@@ -122,7 +122,7 @@ export default function HomePage() {
             type="button"
             id="btn-mode-merge"
             onClick={() => router.push("/merge")}
-            className="mode-card p-6 group"
+            className="mode-card group flex h-full flex-col p-6"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="icon-box h-11 w-11">
@@ -138,7 +138,7 @@ export default function HomePage() {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex-1 space-y-1.5">
               <p
                 className="text-base font-semibold"
                 style={{ color: "var(--color-text-primary)" }}
@@ -172,7 +172,7 @@ export default function HomePage() {
             type="button"
             id="btn-mode-image-to-pdf"
             onClick={() => router.push("/image-to-pdf")}
-            className="mode-card p-6 group"
+            className="mode-card group flex h-full flex-col p-6"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="icon-box h-11 w-11">
@@ -188,7 +188,7 @@ export default function HomePage() {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="flex-1 space-y-1.5">
               <p
                 className="text-base font-semibold"
                 style={{ color: "var(--color-text-primary)" }}
@@ -221,7 +221,7 @@ export default function HomePage() {
             type="button"
             id="btn-mode-organize"
             onClick={() => router.push("/organize")}
-            className="mode-card p-6 group"
+            className="mode-card group flex h-full flex-col p-6"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="icon-box h-11 w-11">
@@ -235,7 +235,7 @@ export default function HomePage() {
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 text-[var(--color-text-muted)]"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex-1 space-y-1.5">
               <p className="text-base font-semibold text-[var(--color-text-primary)]">
                 Organize PDF
               </p>
@@ -254,7 +254,7 @@ export default function HomePage() {
             type="button"
             id="btn-mode-page-numbers"
             onClick={() => router.push("/page-numbers")}
-            className="mode-card p-6 group"
+            className="mode-card group flex h-full flex-col p-6"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="icon-box h-11 w-11">
@@ -268,7 +268,7 @@ export default function HomePage() {
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 text-[var(--color-text-muted)]"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex-1 space-y-1.5">
               <p className="text-base font-semibold text-[var(--color-text-primary)]">
                 Add Page Numbers
               </p>
@@ -287,7 +287,7 @@ export default function HomePage() {
             type="button"
             id="btn-mode-watermark"
             onClick={() => router.push("/watermark")}
-            className="mode-card p-6 group"
+            className="mode-card group flex h-full flex-col p-6"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="icon-box h-11 w-11">
@@ -301,7 +301,7 @@ export default function HomePage() {
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 text-[var(--color-text-muted)]"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="flex-1 space-y-1.5">
               <p className="text-base font-semibold text-[var(--color-text-primary)]">
                 Add Watermark
               </p>

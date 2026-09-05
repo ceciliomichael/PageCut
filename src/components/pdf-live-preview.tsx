@@ -322,10 +322,10 @@ function PdfCanvasPage({
   const height = pageInfo?.height ?? 792;
 
   return (
-    <div className="flex justify-center px-3 md:px-6">
+    <div className="flex justify-center px-4 sm:px-5 md:px-6">
       <div
         ref={wrapperRef}
-        className={`relative overflow-hidden bg-white shadow-[0_8px_28px_rgba(0,0,0,0.10)] ${
+        className={`relative overflow-hidden bg-white shadow-[0_4px_18px_rgba(0,0,0,0.10)] sm:shadow-[0_8px_28px_rgba(0,0,0,0.10)] ${
           spec.marked
             ? "ring-2 ring-[var(--color-accent)]"
             : "ring-1 ring-black/8"
@@ -428,36 +428,36 @@ function PdfPreviewSurface({
   const ready = files.every((file) => documents.has(file));
 
   return (
-    <section className="relative flex min-h-[560px] flex-1 flex-col overflow-hidden bg-[var(--color-bg-subtle)] lg:min-h-0">
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4">
-        <div className="flex items-center gap-2.5">
+    <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--color-bg-subtle)]">
+      <div className="flex h-11 shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 sm:h-12 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
           <span className="h-2 w-2 rounded-full bg-[var(--color-accent)]" />
-          <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+          <span className="truncate text-[13px] font-semibold text-[var(--color-text-primary)] sm:text-sm">
             {title}
           </span>
-          <span className="text-xs text-[var(--color-text-muted)]">
+          <span className="shrink-0 text-[11px] text-[var(--color-text-muted)] sm:text-xs">
             {pageCount} {pageCount === 1 ? "page" : "pages"}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+        <div className="ml-2 flex shrink-0 items-center gap-1.5 text-[11px] text-[var(--color-text-muted)] sm:text-xs">
           {ready && !error ? (
             <>
               <Check size={13} />
-              Live
+              <span className="hidden sm:inline">Live</span>
             </>
           ) : error ? (
-            "Preview issue"
+            <span className="hidden sm:inline">Preview issue</span>
           ) : (
             <>
               <Loader2 size={13} className="animate-spin-slow" />
-              Loading PDF
+              <span className="hidden sm:inline">Loading PDF</span>
             </>
           )}
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto py-5 md:py-7 scrollbar-thin">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4 sm:py-5 md:py-7 scrollbar-thin">
         {error ? (
           <div className="flex h-full items-center justify-center p-8 text-center">
             <p className="max-w-sm text-sm text-[var(--color-danger-text)]">
@@ -471,7 +471,7 @@ function PdfPreviewSurface({
             </p>
           </div>
         ) : ready ? (
-          <div className="space-y-5 md:space-y-7">
+          <div className="space-y-4 sm:space-y-5 md:space-y-7">
             {pages.map((spec) => {
               const document = documents.get(spec.file);
               return document ? (
@@ -685,9 +685,9 @@ function ImagePreviewPage({
   const height = item.height * displayScale;
 
   return (
-    <div className="flex justify-center px-3 md:px-6">
+    <div className="flex justify-center px-4 sm:px-5 md:px-6">
       <div
-        className="relative overflow-hidden bg-white shadow-[0_8px_28px_rgba(0,0,0,0.10)] ring-1 ring-black/8"
+        className="relative overflow-hidden bg-white shadow-[0_4px_18px_rgba(0,0,0,0.10)] ring-1 ring-black/8 sm:shadow-[0_8px_28px_rgba(0,0,0,0.10)]"
         style={{
           width: "100%",
           maxWidth: `${width}px`,
@@ -721,25 +721,25 @@ export function ImageLivePreview({
   items: readonly ImagePreviewItem[];
 }) {
   return (
-    <section className="relative flex min-h-[560px] flex-1 flex-col overflow-hidden bg-[var(--color-bg-subtle)] lg:min-h-0">
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4">
-        <div className="flex items-center gap-2.5">
+    <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--color-bg-subtle)]">
+      <div className="flex h-11 shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 sm:h-12 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
           <span className="h-2 w-2 rounded-full bg-[var(--color-accent)]" />
-          <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+          <span className="truncate text-[13px] font-semibold text-[var(--color-text-primary)] sm:text-sm">
             PDF preview
           </span>
-          <span className="text-xs text-[var(--color-text-muted)]">
+          <span className="shrink-0 text-[11px] text-[var(--color-text-muted)] sm:text-xs">
             {items.length} {items.length === 1 ? "page" : "pages"}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+        <div className="ml-2 flex shrink-0 items-center gap-1.5 text-[11px] text-[var(--color-text-muted)] sm:text-xs">
           <Check size={13} />
-          Live
+          <span className="hidden sm:inline">Live</span>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto py-5 md:py-7 scrollbar-thin">
-        <div className="space-y-5 md:space-y-7">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4 sm:py-5 md:py-7 scrollbar-thin">
+        <div className="space-y-4 sm:space-y-5 md:space-y-7">
           {items.map((item, outputIndex) => (
             <ImagePreviewPage
               key={item.id}

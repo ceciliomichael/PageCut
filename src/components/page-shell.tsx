@@ -50,14 +50,14 @@ export function PageShell({
           <StepBar current={step} mode={mode} />
         </div>
         <div
-          className="h-[1px] w-full mb-4"
+          className={`h-[1px] w-full ${wide ? "mb-2 sm:mb-4" : "mb-4"}`}
           style={{ background: "var(--color-border)" }}
         />
       </div>
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col w-full ${contentWidth} ${wide ? "py-2" : "py-4"} animate-fade-in-up ${
+        className={`flex-1 flex flex-col w-full ${contentWidth} ${wide ? "py-1 sm:py-2" : "py-4"} animate-fade-in-up ${
           fullHeight ? "overflow-hidden" : "justify-center"
         }`}
       >
