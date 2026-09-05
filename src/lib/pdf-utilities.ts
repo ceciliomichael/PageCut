@@ -71,6 +71,52 @@ function watermarkPoint(
   return { x, y: (height - options.fontSize) / 2 };
 }
 
+function drawPageNumber(
+  page: PDFPage,
+  font: PDFFont,
+  pageIndex: number,
+  options: PageNumberOptions,
+): void {
+  if (pageIndex < options.fromPage - 1 || pageIndex > options.toPage - 1) {
+    return;
+  }
+
+  const count = options.toPage - options.fromPage + 1;
+  const finalNumber = options.startNumber + count - 1;
+  const pageNumber = options.startNumber + (pageIndex - (options.fromPage - 1));
+  const label = formatNumber(pageNumber, finalNumber, options.format);
+  const textWidth = font.widthOfTextAtSize(label, options.fontSize);
+  const point = pageNumberPoint(
+    page,
+    textWidth,
+    options.fontSize,
+    options.position,
+  );
+
+  page.drawText(label, {
+    ...point,
+    size: options.fontSize,
+    font,
+    color: rgb(0.18, 0.18, 0.18),
+  });
+}
+
+function drawWatermark(
+  page: PDFPage,
+  font: PDFFont,
+  options: WatermarkOptions,
+): void {
+  const point = watermarkPoint(page, font, options);
+  page.drawText(options.text, {
+    ...point,
+    size: options.fontSize,
+    font,
+    color: rgb(0.35, 0.35, 0.35),
+    opacity: options.opacity,
+    rotate: degrees(options.rotation),
+  });
+}
+
 async function organizePdf(
   session: OrganizeSession,
 ): Promise<PdfUtilityResult> {
@@ -110,7 +156,6 @@ async function addPageNumbers(
   const font = await document.embedFont(StandardFonts.Helvetica);
   const { options } = session;
   const count = options.toPage - options.fromPage + 1;
-  const finalNumber = options.startNumber + count - 1;
 
   for (
     let pageIndex = options.fromPage - 1;
@@ -118,22 +163,7 @@ async function addPageNumbers(
     pageIndex += 1
   ) {
     const page = document.getPage(pageIndex);
-    const pageNumber =
-      options.startNumber + (pageIndex - (options.fromPage - 1));
-    const label = formatNumber(pageNumber, finalNumber, options.format);
-    const textWidth = font.widthOfTextAtSize(label, options.fontSize);
-    const point = pageNumberPoint(
-      page,
-      textWidth,
-      options.fontSize,
-      options.position,
-    );
-    page.drawText(label, {
-      ...point,
-      size: options.fontSize,
-      font,
-      color: rgb(0.18, 0.18, 0.18),
-    });
+    drawPageNumber(page, font, pageIndex, options);
   }
 
   return {
@@ -152,15 +182,7 @@ async function addWatermark(
   const font = await document.embedFont(StandardFonts.HelveticaBold);
 
   for (const page of document.getPages()) {
-    const point = watermarkPoint(page, font, session.options);
-    page.drawText(session.options.text, {
-      ...point,
-      size: session.options.fontSize,
-      font,
-      color: rgb(0.35, 0.35, 0.35),
-      opacity: session.options.opacity,
-      rotate: degrees(session.options.rotation),
-    });
+    drawWatermark(page, font, session.options);
   }
 
   return {

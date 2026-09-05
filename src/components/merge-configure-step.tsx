@@ -1,19 +1,17 @@
 "use client";
 
-import {
-  AlertCircle,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  FileText,
-} from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { PageShell } from "@/components/page-shell";
+import { PdfEditorWorkspace } from "@/components/pdf-editor-workspace";
+import {
+  getMergePreviewPageCount,
+  MergeLivePreview,
+} from "@/components/pdf-live-preview";
 import { truncateFileName } from "@/lib/pdf-extract";
-import { getMergeSession, updateMergeSessionItems } from "@/lib/pdf-session";
 import type { MergeFileItem, MergeRangeMode } from "@/lib/pdf-session";
+import { getMergeSession, updateMergeSessionItems } from "@/lib/pdf-session";
 
 // ─── local editing state (extends session type with raw input strings) ───────
 
@@ -155,67 +153,52 @@ export default function MergeConfigureStep() {
     router.push("/merge/results");
   }
 
-  return (
-    <PageShell
-      step={1}
-      mode="merge"
-      fullHeight
-      footer={
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center px-4 md:px-6 lg:px-8 bg-[var(--color-bg)] border-t border-[var(--color-border)] z-30">
-          <div className="w-full max-w-2xl py-4 space-y-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => router.push("/merge")}
-                className="btn-secondary"
-                id="btn-merge-back"
-              >
-                <ArrowLeft size={15} />
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleMerge}
-                className="btn-primary sm:ml-auto"
-                id="btn-merge-proceed"
-              >
-                Merge files
-                <ArrowRight size={15} />
-              </button>
-            </div>
-            <p
-              className="text-xs text-center"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Files are merged in the order shown. Drag to reorder.
-            </p>
-          </div>
-        </div>
-      }
-    >
-      <div className="flex-1 flex flex-col w-full space-y-4 overflow-hidden">
-        {/* Title */}
-        <div className="space-y-1.5 text-center shrink-0">
-          <h1
-            className="text-2xl font-semibold tracking-tight md:text-3xl"
-            style={{ color: "var(--color-text-primary)" }}
-          >
-            Organize &amp; configure
-          </h1>
-          <p
-            className="text-sm leading-6 max-w-md mx-auto"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            Set the order, choose pages, and name your merged document.
-          </p>
-        </div>
+  const previewItems = items.map((item) => {
+    if (item.rangeMode === "all") {
+      return {
+        id: item.id,
+        file: item.file,
+        totalPages: item.totalPages,
+        rangeMode: item.rangeMode,
+      };
+    }
 
-        {/* Output filename input - fixed, shrink-0 */}
-        <div className="w-full max-w-2xl mx-auto shrink-0">
+    const from = Number.parseInt(item.fromRaw, 10);
+    const to = Number.parseInt(item.toRaw, 10);
+    const valid =
+      Number.isInteger(from) &&
+      Number.isInteger(to) &&
+      from >= 1 &&
+      to >= from &&
+      to <= item.totalPages;
+
+    return {
+      id: item.id,
+      file: item.file,
+      totalPages: item.totalPages,
+      rangeMode: item.rangeMode,
+      customRange: valid ? { from, to } : undefined,
+    };
+  });
+  const previewPageCount = getMergePreviewPageCount(previewItems);
+
+  return (
+    <PageShell step={1} mode="merge" fullHeight wide>
+      <PdfEditorWorkspace
+        title="Merge PDFs"
+        description="Set file order and page ranges while the merged output updates beside you."
+        fileName={`${items.length} PDF ${items.length === 1 ? "file" : "files"}`}
+        pageCount={previewPageCount}
+        preview={<MergeLivePreview items={previewItems} />}
+        primaryLabel="Merge files"
+        onPrimary={handleMerge}
+        onBack={() => router.push("/merge")}
+        footerNote="Files merge in the order shown"
+      >
+        <div>
           <label
             htmlFor="merge-output-name"
-            className="block text-xs font-medium mb-1.5"
-            style={{ color: "var(--color-text-secondary)" }}
+            className="mb-1.5 block text-xs font-medium text-[var(--color-text-secondary)]"
           >
             Output filename
           </label>
@@ -238,22 +221,33 @@ export default function MergeConfigureStep() {
           </div>
         </div>
 
-        {/* Scrollable file list */}
-        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-44 sm:mb-28 pb-2 scrollbar-thin space-y-3">
-          {items.map((item, index) => (
-            <FileConfigCard
-              key={item.id}
-              item={item}
-              index={index}
-              total={items.length}
-              onMoveUp={() => moveUp(index)}
-              onMoveDown={() => moveDown(index)}
-              onModeChange={(mode) => setMode(item.id, mode)}
-              onRawChange={(field, value) => updateRaw(item.id, field, value)}
-            />
-          ))}
+        <div>
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-[var(--color-text-primary)]">
+              Source PDFs
+            </p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
+              Reorder files or choose a custom range. Invalid custom ranges are
+              temporarily omitted from the live preview.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {items.map((item, index) => (
+              <FileConfigCard
+                key={item.id}
+                item={item}
+                index={index}
+                total={items.length}
+                onMoveUp={() => moveUp(index)}
+                onMoveDown={() => moveDown(index)}
+                onModeChange={(mode) => setMode(item.id, mode)}
+                onRawChange={(field, value) => updateRaw(item.id, field, value)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      </PdfEditorWorkspace>
     </PageShell>
   );
 }

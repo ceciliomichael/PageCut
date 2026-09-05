@@ -1,18 +1,10 @@
 "use client";
 
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  FileText,
-  RotateCcw,
-  RotateCw,
-  Trash2,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, RotateCcw, RotateCw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageShell } from "@/components/page-shell";
+import { PdfEditorWorkspace } from "@/components/pdf-editor-workspace";
 import {
   getPdfUtilitySession,
   type OrganizedPage,
@@ -36,12 +28,18 @@ export default function OrganizeConfigureStep() {
     if (!session) router.replace("/organize");
   }, [router, session]);
 
-  if (!session) return null;
+  const previewSession = useMemo(
+    () => (session ? { ...session, pages, outputName: undefined } : null),
+    [pages, session],
+  );
+
+  if (!session || !previewSession) return null;
   const activeSession = session;
 
   function move(index: number, delta: -1 | 1) {
     const target = index + delta;
     if (target < 0 || target >= pages.length) return;
+
     setPages((previous) => {
       const next = [...previous];
       [next[index], next[target]] = [next[target], next[index]];
@@ -64,7 +62,7 @@ export default function OrganizeConfigureStep() {
     setPages((previous) => previous.filter((page) => page.id !== id));
   }
 
-  function continueToResults() {
+  function savePdf() {
     setPdfUtilitySession({
       ...activeSession,
       pages,
@@ -74,59 +72,29 @@ export default function OrganizeConfigureStep() {
   }
 
   return (
-    <PageShell
-      step={1}
-      mode="organize"
-      fullHeight
-      footer={
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center px-4 md:px-6 lg:px-8 bg-[var(--color-bg)] border-t border-[var(--color-border)] z-30">
-          <div className="w-full max-w-2xl py-4 space-y-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => router.push("/organize")}
-                className="btn-secondary"
-              >
-                <ArrowLeft size={15} />
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={continueToResults}
-                className="btn-primary sm:ml-auto"
-              >
-                Save PDF
-                <ArrowRight size={15} />
-              </button>
-            </div>
-            <p className="text-xs text-center text-[var(--color-text-muted)]">
-              {pages.length} of {activeSession.totalPages} pages will be kept.
-            </p>
-          </div>
-        </div>
-      }
-    >
-      <div className="flex-1 flex flex-col w-full space-y-4 overflow-hidden">
-        <div className="space-y-1.5 text-center shrink-0">
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl text-[var(--color-text-primary)]">
-            Organize PDF pages
-          </h1>
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            Reorder, rotate, or remove pages. Changes are applied when you save.
-          </p>
-        </div>
-
-        <div className="w-full max-w-2xl mx-auto shrink-0">
+    <PageShell step={1} mode="organize" fullHeight wide>
+      <PdfEditorWorkspace
+        title="Organize PDF"
+        description="Arrange the document while the complete PDF updates beside you."
+        fileName={activeSession.file.name}
+        pageCount={pages.length}
+        previewSession={previewSession}
+        primaryLabel="Save PDF"
+        onPrimary={savePdf}
+        onBack={() => router.push("/organize")}
+        footerNote={`${pages.length} of ${activeSession.totalPages} pages kept`}
+      >
+        <section>
           <label
             htmlFor="organize-output"
-            className="block mb-1.5 text-xs font-medium text-[var(--color-text-secondary)]"
+            className="block text-xs font-medium text-[var(--color-text-secondary)]"
           >
             Output filename
           </label>
-          <div className="relative flex items-center">
+          <div className="relative mt-1.5 flex items-center">
             <input
               id="organize-output"
-              className="input-field w-full pr-14"
+              className="input-field pr-14"
               value={outputName}
               onChange={(event) => setOutputName(event.target.value)}
               placeholder="organized-document"
@@ -136,80 +104,89 @@ export default function OrganizeConfigureStep() {
               .pdf
             </span>
           </div>
-        </div>
+        </section>
 
-        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-44 sm:mb-28 pb-2 scrollbar-thin space-y-3">
-          {pages.map((page, index) => (
-            <div
-              key={page.id}
-              className="rounded-xl p-4 bg-[var(--color-surface)] border border-[var(--color-border)]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1 shrink-0">
+        <section className="border-t border-[var(--color-border)] pt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                Pages
+              </h2>
+              <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                Reorder, rotate, or remove. Preview updates automatically.
+              </p>
+            </div>
+            <span className="tag-badge">{pages.length}</span>
+          </div>
+
+          <div className="space-y-2">
+            {pages.map((page, index) => (
+              <div
+                key={page.id}
+                className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-2.5 py-2"
+              >
+                <div className="flex shrink-0 flex-col gap-1">
                   <button
                     type="button"
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-bg-subtle)] disabled:opacity-30"
-                    aria-label="Move page up"
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-surface)] text-[var(--color-text-secondary)] disabled:opacity-25"
+                    aria-label={`Move page ${page.sourceIndex + 1} up`}
                   >
-                    <ArrowUp size={13} />
+                    <ArrowUp size={12} />
                   </button>
                   <button
                     type="button"
                     onClick={() => move(index, 1)}
                     disabled={index === pages.length - 1}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-bg-subtle)] disabled:opacity-30"
-                    aria-label="Move page down"
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-surface)] text-[var(--color-text-secondary)] disabled:opacity-25"
+                    aria-label={`Move page ${page.sourceIndex + 1} down`}
                   >
-                    <ArrowDown size={13} />
+                    <ArrowDown size={12} />
                   </button>
                 </div>
 
-                <div className="icon-box h-10 w-10">
-                  <FileText size={17} />
-                </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
                     Page {page.sourceIndex + 1}
                   </p>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    Output page {index + 1} · Rotation {page.rotation}°
+                  <p className="text-[11px] text-[var(--color-text-muted)]">
+                    Position {index + 1} · {page.rotation}°
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     onClick={() => rotate(page.id, -90)}
-                    className="btn-secondary px-2.5"
-                    aria-label="Rotate left"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]"
+                    aria-label={`Rotate page ${page.sourceIndex + 1} left`}
                   >
-                    <RotateCcw size={14} />
+                    <RotateCcw size={13} />
                   </button>
                   <button
                     type="button"
                     onClick={() => rotate(page.id, 90)}
-                    className="btn-secondary px-2.5"
-                    aria-label="Rotate right"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]"
+                    aria-label={`Rotate page ${page.sourceIndex + 1} right`}
                   >
-                    <RotateCw size={14} />
+                    <RotateCw size={13} />
                   </button>
                   <button
                     type="button"
                     onClick={() => remove(page.id)}
                     disabled={pages.length <= 1}
-                    className="btn-danger px-2.5 disabled:opacity-30"
-                    aria-label="Remove page"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-danger-text)] hover:bg-[var(--color-danger-bg)] disabled:opacity-25"
+                    aria-label={`Remove page ${page.sourceIndex + 1}`}
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={13} />
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </section>
+      </PdfEditorWorkspace>
     </PageShell>
   );
 }

@@ -1,15 +1,11 @@
 "use client";
 
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  Images,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, Images } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/page-shell";
+import { PdfEditorWorkspace } from "@/components/pdf-editor-workspace";
+import { ImageLivePreview } from "@/components/pdf-live-preview";
 import { truncateFileName } from "@/lib/pdf-extract";
 import type { ImageFileItem } from "@/lib/pdf-session";
 import {
@@ -66,64 +62,23 @@ export default function ImageConfigureStep() {
   }
 
   return (
-    <PageShell
-      step={1}
-      mode="image"
-      fullHeight
-      footer={
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center px-4 md:px-6 lg:px-8 bg-[var(--color-bg)] border-t border-[var(--color-border)] z-30">
-          <div className="w-full max-w-2xl py-4 space-y-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => router.push("/image-to-pdf")}
-                className="btn-secondary"
-                id="btn-image-back"
-              >
-                <ArrowLeft size={15} />
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleCreatePdf}
-                className="btn-primary sm:ml-auto"
-                id="btn-image-create-pdf"
-              >
-                Create PDF
-                <ArrowRight size={15} />
-              </button>
-            </div>
-            <p
-              className="text-xs text-center"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Images become PDF pages in the order shown.
-            </p>
-          </div>
-        </div>
-      }
-    >
-      <div className="flex-1 flex flex-col w-full space-y-4 overflow-hidden">
-        <div className="space-y-1.5 text-center shrink-0">
-          <h1
-            className="text-2xl font-semibold tracking-tight md:text-3xl"
-            style={{ color: "var(--color-text-primary)" }}
-          >
-            Organize your PDF pages
-          </h1>
-          <p
-            className="text-sm leading-6 max-w-md mx-auto"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            Set the image order and choose a filename for the finished PDF.
-          </p>
-        </div>
-
-        <div className="w-full max-w-2xl mx-auto shrink-0">
+    <PageShell step={1} mode="image" fullHeight wide>
+      <PdfEditorWorkspace
+        title="Image to PDF"
+        description="Arrange the image pages while the finished PDF layout updates beside you."
+        fileName={`${items.length} source ${items.length === 1 ? "image" : "images"}`}
+        pageCount={items.length}
+        preview={<ImageLivePreview items={items} />}
+        primaryLabel="Create PDF"
+        onPrimary={handleCreatePdf}
+        onBack={() => router.push("/image-to-pdf")}
+        primaryDisabled={items.length === 0}
+        footerNote="Images become PDF pages in this order"
+      >
+        <div>
           <label
             htmlFor="image-output-name"
-            className="block text-xs font-medium mb-1.5"
-            style={{ color: "var(--color-text-secondary)" }}
+            className="mb-1.5 block text-xs font-medium text-[var(--color-text-secondary)]"
           >
             Output filename
           </label>
@@ -146,80 +101,83 @@ export default function ImageConfigureStep() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-44 sm:mb-28 pb-2 scrollbar-thin space-y-3">
-          {items.map((item, index) => (
-            <div
-              key={item.id}
-              className="rounded-xl p-4 animate-slide-in"
-              style={{
-                background: "var(--color-surface)",
-                border: "1px solid var(--color-border)",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => moveUp(index)}
-                    disabled={index === 0}
-                    aria-label="Move image up"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150 disabled:opacity-30"
-                    style={{ background: "var(--color-bg-subtle)" }}
-                  >
-                    <ArrowUp
-                      size={13}
+        <div>
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-[var(--color-text-primary)]">
+              Page order
+            </p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
+              Move images up or down. The preview pages move immediately without
+              rebuilding the PDF.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {items.map((item, index) => (
+              <div
+                key={item.id}
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 animate-slide-in"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveUp(index)}
+                      disabled={index === 0}
+                      aria-label="Move image up"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-bg-subtle)] transition-colors duration-150 disabled:opacity-30"
+                    >
+                      <ArrowUp
+                        size={13}
+                        style={{ color: "var(--color-text-secondary)" }}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveDown(index)}
+                      disabled={index === items.length - 1}
+                      aria-label="Move image down"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-bg-subtle)] transition-colors duration-150 disabled:opacity-30"
+                    >
+                      <ArrowDown
+                        size={13}
+                        style={{ color: "var(--color-text-secondary)" }}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="icon-box h-9 w-9">
+                    <Images
+                      size={16}
                       style={{ color: "var(--color-text-secondary)" }}
                     />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveDown(index)}
-                    disabled={index === items.length - 1}
-                    aria-label="Move image down"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150 disabled:opacity-30"
-                    style={{ background: "var(--color-bg-subtle)" }}
-                  >
-                    <ArrowDown
-                      size={13}
-                      style={{ color: "var(--color-text-secondary)" }}
-                    />
-                  </button>
-                </div>
+                  </div>
 
-                <div className="icon-box h-9 w-9">
-                  <Images
-                    size={16}
-                    style={{ color: "var(--color-text-secondary)" }}
-                  />
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="truncate text-sm font-medium"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      {truncateFileName(item.file.name)}
+                    </p>
+                    <p
+                      className="text-xs"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
+                      {formatFileSize(item.file.size)} · {item.width} ×{" "}
+                      {item.height}
+                    </p>
+                  </div>
 
-                <div className="min-w-0 flex-1">
-                  <p
-                    className="truncate text-sm font-medium"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
-                    {truncateFileName(item.file.name)}
-                  </p>
-                  <p
-                    className="text-xs"
-                    style={{ color: "var(--color-text-muted)" }}
-                  >
-                    {formatFileSize(item.file.size)} · {item.width} ×{" "}
-                    {item.height}
-                  </p>
+                  <span className="shrink-0 text-xs font-semibold text-[var(--color-text-muted)]">
+                    {index + 1}/{items.length}
+                  </span>
                 </div>
-
-                <span
-                  className="shrink-0 text-xs font-semibold"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  {index + 1}/{items.length}
-                </span>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      </PdfEditorWorkspace>
     </PageShell>
   );
 }

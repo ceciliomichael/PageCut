@@ -168,7 +168,7 @@ export default function PdfUtilityUploadStep({
           onDragLeave={() => {
             if (state.kind === "dragging") setState({ kind: "idle" });
           }}
-          className="relative overflow-hidden rounded-2xl transition-all duration-200 w-full max-w-2xl mx-auto shrink-0"
+          className="relative block overflow-hidden rounded-2xl transition-all duration-200 w-full max-w-2xl mx-auto shrink-0"
           style={{
             background: isDragging
               ? "var(--color-bg-subtle)"

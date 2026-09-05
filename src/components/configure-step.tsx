@@ -1,27 +1,12 @@
 "use client";
 
-import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  FileText,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { AlertCircle, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  type ChangeEvent,
-  useCallback,
-  useEffect,
-  useId,
-  useState,
-} from "react";
+import { type ChangeEvent, useEffect, useId, useState } from "react";
 import { PageShell } from "@/components/page-shell";
-import {
-  type PageRange,
-  truncateFileName,
-  validateRange,
-} from "@/lib/pdf-extract";
+import { PdfEditorWorkspace } from "@/components/pdf-editor-workspace";
+import { SplitLivePreview } from "@/components/pdf-live-preview";
+import { type PageRange, validateRange } from "@/lib/pdf-extract";
 import { getSession, updateSessionRanges } from "@/lib/pdf-session";
 
 type RangeEntry = PageRange & {
@@ -44,7 +29,7 @@ export default function ConfigurePage() {
   const baseId = useId();
 
   const [entries, setEntries] = useState<RangeEntry[]>(() => {
-    if (session && session.ranges && session.ranges.length > 0) {
+    if (session?.ranges && session.ranges.length > 0) {
       return session.ranges.map((r) => ({
         ...r,
         fromRaw: r.from.toString(),
@@ -143,95 +128,44 @@ export default function ConfigurePage() {
   const canExtract = entries.some(
     (e) => e.fromRaw.trim() !== "" && e.toRaw.trim() !== "",
   );
+  const previewRanges: PageRange[] = entries.map((entry) => ({
+    id: entry.id,
+    from: entry.from,
+    to: entry.to,
+    label: entry.label || undefined,
+  }));
 
   return (
-    <PageShell
-      step={1}
-      fullHeight
-      footer={
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center px-4 md:px-6 lg:px-8 bg-[var(--color-bg)] border-t border-[var(--color-border)] z-30">
-          <div className="w-full max-w-2xl py-4 space-y-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => router.push("/split")}
-                className="btn-secondary"
-                id="btn-back-to-upload"
-              >
-                <ArrowLeft size={15} />
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleExtract}
-                disabled={!canExtract}
-                className="btn-primary sm:ml-auto"
-                id="btn-extract-pages"
-              >
-                Extract pages
-                <ArrowRight size={15} />
-              </button>
-            </div>
-            <p
-              className="text-xs text-center"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Ranges can overlap — each range always produces its own
-              independent PDF file.
+    <PageShell step={1} mode="split" fullHeight wide>
+      <PdfEditorWorkspace
+        title="Split & extract"
+        description="Define page ranges while the source PDF stays visible beside you."
+        fileName={file.name}
+        pageCount={totalPages}
+        preview={
+          <SplitLivePreview
+            file={file}
+            totalPages={totalPages}
+            ranges={previewRanges}
+          />
+        }
+        primaryLabel="Extract pages"
+        onPrimary={handleExtract}
+        onBack={() => router.push("/split")}
+        primaryDisabled={!canExtract}
+        footerNote="Each range creates its own PDF"
+      >
+        <div>
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-[var(--color-text-primary)]">
+              Page ranges
+            </p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
+              Valid ranges are marked directly in the source preview. Ranges may
+              overlap.
             </p>
           </div>
-        </div>
-      }
-    >
-      <div className="flex-1 flex flex-col w-full space-y-4 overflow-hidden">
-        {/* Sticky page title and description */}
-        <div className="space-y-1.5 text-center shrink-0">
-          <h1
-            className="text-2xl font-semibold tracking-tight md:text-3xl"
-            style={{ color: "var(--color-text-primary)" }}
-          >
-            Define page ranges
-          </h1>
-          <p
-            className="text-sm leading-6 max-w-md mx-auto"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            Add one or more ranges. Each range produces a separate PDF download.
-          </p>
-        </div>
 
-        {/* Sticky File card */}
-        <div
-          className="flex items-center gap-3 rounded-xl px-4 py-3 w-full max-w-2xl mx-auto shrink-0"
-          style={{
-            background: "var(--color-bg-subtle)",
-            border: "1px solid var(--color-border)",
-          }}
-        >
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-            style={{ background: "var(--color-surface)" }}
-          >
-            <FileText
-              size={16}
-              style={{ color: "var(--color-text-secondary)" }}
-            />
-          </div>
-          <div className="min-w-0 flex-1 text-left">
-            <p
-              className="truncate text-sm font-medium"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              {truncateFileName(file.name)}
-            </p>
-            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-              {totalPages} {totalPages === 1 ? "page" : "pages"} total
-            </p>
-          </div>
-        </div>
-
-        {/* Scrollable Range List Area */}
-        <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto px-3 mb-44 sm:mb-28 pb-2 scrollbar-thin">
           <div className="space-y-3">
             {entries.map((entry, index) => (
               <RangeRow
@@ -246,7 +180,6 @@ export default function ConfigurePage() {
             ))}
           </div>
 
-          {/* Add button at the bottom of the list */}
           <button
             type="button"
             onClick={addEntry}
@@ -274,7 +207,7 @@ export default function ConfigurePage() {
             Add another range
           </button>
         </div>
-      </div>
+      </PdfEditorWorkspace>
     </PageShell>
   );
 }

@@ -16,6 +16,7 @@ type PageShellProps = {
   children: ReactNode;
   footer?: ReactNode;
   fullHeight?: boolean;
+  wide?: boolean;
 };
 
 export function PageShell({
@@ -24,15 +25,18 @@ export function PageShell({
   children,
   footer,
   fullHeight,
+  wide,
 }: PageShellProps) {
+  const contentWidth = wide ? "max-w-[1440px]" : "max-w-3xl";
+
   return (
     <main
-      className={`relative flex flex-col items-center px-4 py-4 md:px-6 lg:px-8 ${
+      className={`relative flex flex-col items-center px-3 py-3 md:px-5 lg:px-6 ${
         fullHeight ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh]"
       }`}
     >
       {/* Header - Sticky at the top */}
-      <div className="w-full max-w-4xl bg-[var(--color-bg)] z-20 animate-fade-in shrink-0">
+      <div className="w-full max-w-5xl bg-[var(--color-bg)] z-20 animate-fade-in shrink-0">
         <div className="flex items-center justify-between py-3">
           <Link
             href="/"
@@ -53,7 +57,7 @@ export function PageShell({
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col w-full max-w-3xl py-4 animate-fade-in-up ${
+        className={`flex-1 flex flex-col w-full ${contentWidth} ${wide ? "py-2" : "py-4"} animate-fade-in-up ${
           fullHeight ? "overflow-hidden" : "justify-center"
         }`}
       >
