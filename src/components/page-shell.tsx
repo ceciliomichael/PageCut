@@ -1,12 +1,18 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { StepBar } from "./step-bar";
 
 type PageShellProps = {
   step: 0 | 1 | 2;
-  mode?: "split" | "merge" | "image";
+  mode?:
+    | "split"
+    | "merge"
+    | "image"
+    | "organize"
+    | "page-numbers"
+    | "watermark";
   children: ReactNode;
   footer?: ReactNode;
   fullHeight?: boolean;

@@ -25,9 +25,33 @@ const IMAGE_STEPS: Step[] = [
   { label: "Convert", description: "Download your PDF" },
 ];
 
+const ORGANIZE_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Organize", description: "Arrange page order" },
+  { label: "Save", description: "Download your PDF" },
+];
+
+const PAGE_NUMBER_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Number", description: "Set number style" },
+  { label: "Save", description: "Download your PDF" },
+];
+
+const WATERMARK_STEPS: Step[] = [
+  { label: "Upload", description: "Choose your PDF" },
+  { label: "Watermark", description: "Set watermark style" },
+  { label: "Save", description: "Download your PDF" },
+];
+
 type StepBarProps = {
   current: 0 | 1 | 2;
-  mode?: "split" | "merge" | "image";
+  mode?:
+    | "split"
+    | "merge"
+    | "image"
+    | "organize"
+    | "page-numbers"
+    | "watermark";
 };
 
 export function StepBar({ current, mode = "split" }: StepBarProps) {
@@ -36,7 +60,13 @@ export function StepBar({ current, mode = "split" }: StepBarProps) {
       ? MERGE_STEPS
       : mode === "image"
         ? IMAGE_STEPS
-        : SPLIT_STEPS;
+        : mode === "organize"
+          ? ORGANIZE_STEPS
+          : mode === "page-numbers"
+            ? PAGE_NUMBER_STEPS
+            : mode === "watermark"
+              ? WATERMARK_STEPS
+              : SPLIT_STEPS;
 
   return (
     <div className="flex items-center gap-0">

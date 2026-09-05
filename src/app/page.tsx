@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowRight, GitMerge, Images, Scissors } from "lucide-react";
+import {
+  ArrowRight,
+  GitMerge,
+  Hash,
+  Images,
+  ListOrdered,
+  Scissors,
+  Stamp,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
@@ -8,6 +16,7 @@ import {
   clearMergeSession,
   clearSession,
 } from "@/lib/pdf-session";
+import { clearPdfUtilitySession } from "@/lib/pdf-utility-session";
 
 export default function HomePage() {
   const router = useRouter();
@@ -16,6 +25,7 @@ export default function HomePage() {
     clearSession();
     clearMergeSession();
     clearImageToPdfSession();
+    clearPdfUtilitySession();
   }, []);
 
   return (
@@ -23,7 +33,7 @@ export default function HomePage() {
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12 md:px-6 lg:px-8"
       style={{ background: "var(--color-bg)" }}
     >
-      <div className="w-full max-w-4xl animate-fade-in-up">
+      <div className="w-full max-w-5xl animate-fade-in-up">
         {/* Brand header */}
         <div className="flex items-center gap-2 mb-10 justify-center">
           <span
@@ -203,6 +213,105 @@ export default function HomePage() {
                 style={{ color: "var(--color-text-muted)" }}
               >
                 Multiple images → 1 PDF
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            id="btn-mode-organize"
+            onClick={() => router.push("/organize")}
+            className="mode-card p-6 group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="icon-box h-11 w-11">
+                <ListOrdered
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                Organize PDF
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Reorder, rotate, and remove PDF pages in one tool.
+              </p>
+            </div>
+            <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Reorder · rotate · remove
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            id="btn-mode-page-numbers"
+            onClick={() => router.push("/page-numbers")}
+            className="mode-card p-6 group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="icon-box h-11 w-11">
+                <Hash
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                Add Page Numbers
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Number every page or a custom range with flexible placement.
+              </p>
+            </div>
+            <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Position · format · range
+              </p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            id="btn-mode-watermark"
+            onClick={() => router.push("/watermark")}
+            className="mode-card p-6 group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="icon-box h-11 w-11">
+                <Stamp
+                  size={20}
+                  className="text-[var(--color-text-secondary)]"
+                />
+              </div>
+              <ArrowRight
+                size={16}
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1 text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-base font-semibold text-[var(--color-text-primary)]">
+                Add Watermark
+              </p>
+              <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+                Apply a customizable text watermark across the entire PDF.
+              </p>
+            </div>
+            <div className="mt-5 pt-4 border-t border-[var(--color-border)]">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Text · opacity · rotation
               </p>
             </div>
           </button>
