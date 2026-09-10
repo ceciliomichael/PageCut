@@ -1,8 +1,12 @@
 "use client";
 
-import { AlertCircle, ArrowDown, ArrowUp, FileText } from "lucide-react";
+import { AlertCircle, FileText, GripVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useState } from "react";
+import {
+  DragReorderOverlay,
+  DropIndicator,
+} from "@/components/drag-reorder-overlay";
 import { PageShell } from "@/components/page-shell";
 import { PdfEditorWorkspace } from "@/components/pdf-editor-workspace";
 import {
@@ -12,6 +16,7 @@ import {
 import { truncateFileName } from "@/lib/pdf-extract";
 import type { MergeFileItem, MergeRangeMode } from "@/lib/pdf-session";
 import { getMergeSession, updateMergeSessionItems } from "@/lib/pdf-session";
+import { useDragReorder } from "@/lib/use-drag-reorder";
 
 // ─── local editing state (extends session type with raw input strings) ───────
 
@@ -47,6 +52,13 @@ export default function MergeConfigureStep() {
   const [outputName, setOutputName] = useState<string>(
     session?.outputName ?? "",
   );
+  const dragReorder = useDragReorder(setItems);
+  const draggedItem = dragReorder.draggingId
+    ? items.find((item) => item.id === dragReorder.draggingId)
+    : undefined;
+  const draggedIndex = draggedItem
+    ? items.findIndex((item) => item.id === draggedItem.id)
+    : -1;
 
   useEffect(() => {
     if (!session) {
@@ -55,25 +67,6 @@ export default function MergeConfigureStep() {
   }, [session, router]);
 
   if (!session) return null;
-
-  // ── reorder helpers ────────────────────────────────────────────────────────
-  function moveUp(index: number) {
-    if (index === 0) return;
-    setItems((prev) => {
-      const next = [...prev];
-      [next[index - 1], next[index]] = [next[index], next[index - 1]];
-      return next;
-    });
-  }
-
-  function moveDown(index: number) {
-    setItems((prev) => {
-      if (index >= prev.length - 1) return prev;
-      const next = [...prev];
-      [next[index], next[index + 1]] = [next[index + 1], next[index]];
-      return next;
-    });
-  }
 
   // ── range mode toggle ──────────────────────────────────────────────────────
   function setMode(id: string, mode: MergeRangeMode) {
@@ -227,8 +220,8 @@ export default function MergeConfigureStep() {
               Source PDFs
             </p>
             <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
-              Reorder files or choose a custom range. Invalid custom ranges are
-              temporarily omitted from the live preview.
+              Drag files to reorder them or choose a custom range. Invalid
+              custom ranges are temporarily omitted from the live preview.
             </p>
           </div>
 
@@ -239,8 +232,7 @@ export default function MergeConfigureStep() {
                 item={item}
                 index={index}
                 total={items.length}
-                onMoveUp={() => moveUp(index)}
-                onMoveDown={() => moveDown(index)}
+                dragReorder={dragReorder}
                 onModeChange={(mode) => setMode(item.id, mode)}
                 onRawChange={(field, value) => updateRaw(item.id, field, value)}
               />
@@ -248,6 +240,25 @@ export default function MergeConfigureStep() {
           </div>
         </div>
       </PdfEditorWorkspace>
+      {draggedItem && dragReorder.dragPoint && dragReorder.dragFrame && (
+        <DragReorderOverlay
+          x={dragReorder.dragPoint.x}
+          y={dragReorder.dragPoint.y}
+          offsetX={dragReorder.dragFrame.offsetX}
+          offsetY={dragReorder.dragFrame.offsetY}
+          width={dragReorder.dragFrame.width}
+        >
+          <FileConfigCard
+            item={draggedItem}
+            index={draggedIndex}
+            total={items.length}
+            dragReorder={dragReorder}
+            onModeChange={() => undefined}
+            onRawChange={() => undefined}
+            isOverlay
+          />
+        </DragReorderOverlay>
+      )}
     </PageShell>
   );
 }
@@ -258,78 +269,47 @@ type FileConfigCardProps = {
   item: EditableItem;
   index: number;
   total: number;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
+  dragReorder: ReturnType<typeof useDragReorder<EditableItem>>;
   onModeChange: (mode: MergeRangeMode) => void;
   onRawChange: (field: "fromRaw" | "toRaw", value: string) => void;
+  isOverlay?: boolean;
 };
 
 function FileConfigCard({
   item,
   index,
   total,
-  onMoveUp,
-  onMoveDown,
+  dragReorder,
   onModeChange,
   onRawChange,
+  isOverlay = false,
 }: FileConfigCardProps) {
+  const dropIndicator = dragReorder.getDropIndicator(item.id);
+
   return (
     <div
-      className="rounded-xl p-4 space-y-3 animate-slide-in"
+      data-reorder-id={isOverlay ? undefined : item.id}
+      className={`relative rounded-xl bg-[var(--color-surface)] p-4 space-y-3 transition-colors ${isOverlay ? "shadow-xl opacity-95" : "touch-none cursor-grab hover:bg-[var(--color-bg-subtle)] active:cursor-grabbing animate-slide-in"} ${!isOverlay && dragReorder.draggingId === item.id ? "opacity-50" : ""}`}
       style={{
-        background: "var(--color-surface)",
         border: `1px solid ${item.validationError ? "var(--color-danger-border)" : "var(--color-border)"}`,
       }}
+      onPointerDown={
+        isOverlay
+          ? undefined
+          : (event) => dragReorder.handlePointerDown(event, item.id)
+      }
+      onPointerMove={isOverlay ? undefined : dragReorder.handlePointerMove}
+      onPointerUp={isOverlay ? undefined : dragReorder.handlePointerEnd}
+      onPointerCancel={isOverlay ? undefined : dragReorder.handlePointerEnd}
     >
+      {!isOverlay && dropIndicator && (
+        <DropIndicator position={dropIndicator} />
+      )}
       {/* Header row */}
       <div className="flex items-center gap-3">
-        {/* Order controls */}
-        <div className="flex flex-col gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={onMoveUp}
-            disabled={index === 0}
-            aria-label="Move file up"
-            className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150 disabled:opacity-30"
-            style={{ background: "var(--color-bg-subtle)" }}
-            onMouseEnter={(e) => {
-              if (index !== 0)
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "var(--color-bg)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "var(--color-bg-subtle)";
-            }}
-          >
-            <ArrowUp
-              size={13}
-              style={{ color: "var(--color-text-secondary)" }}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={onMoveDown}
-            disabled={index === total - 1}
-            aria-label="Move file down"
-            className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150 disabled:opacity-30"
-            style={{ background: "var(--color-bg-subtle)" }}
-            onMouseEnter={(e) => {
-              if (index !== total - 1)
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "var(--color-bg)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "var(--color-bg-subtle)";
-            }}
-          >
-            <ArrowDown
-              size={13}
-              style={{ color: "var(--color-text-secondary)" }}
-            />
-          </button>
-        </div>
+        <span className="flex h-9 w-7 shrink-0 items-center justify-center text-[var(--color-text-muted)]">
+          <GripVertical size={15} />
+        </span>
 
         {/* File icon */}
         <div
@@ -367,6 +347,7 @@ function FileConfigCard({
 
       {/* Range mode selector */}
       <div
+        data-no-drag="true"
         className="flex rounded-lg overflow-hidden"
         style={{ border: "1px solid var(--color-border)" }}
       >
@@ -374,6 +355,7 @@ function FileConfigCard({
           <button
             key={mode}
             type="button"
+            data-no-drag="true"
             onClick={() => onModeChange(mode)}
             className="flex-1 py-2 text-xs font-medium transition-colors duration-150"
             style={{
@@ -396,18 +378,22 @@ function FileConfigCard({
 
       {/* Custom range inputs */}
       {item.rangeMode === "custom" && (
-        <div className="grid grid-cols-2 gap-3 animate-fade-in">
+        <div
+          data-no-drag="true"
+          className="grid grid-cols-2 gap-3 animate-fade-in"
+        >
           <div>
             <label
-              htmlFor={`merge-from-${item.id}`}
+              htmlFor={`${isOverlay ? "merge-overlay-from" : "merge-from"}-${item.id}`}
               className="mb-1.5 block text-xs font-medium"
               style={{ color: "var(--color-text-secondary)" }}
             >
               Start page
             </label>
             <input
-              id={`merge-from-${item.id}`}
+              id={`${isOverlay ? "merge-overlay-from" : "merge-from"}-${item.id}`}
               type="number"
+              data-no-drag="true"
               min={1}
               max={item.totalPages}
               placeholder="e.g. 1"
@@ -428,15 +414,16 @@ function FileConfigCard({
           </div>
           <div>
             <label
-              htmlFor={`merge-to-${item.id}`}
+              htmlFor={`${isOverlay ? "merge-overlay-to" : "merge-to"}-${item.id}`}
               className="mb-1.5 block text-xs font-medium"
               style={{ color: "var(--color-text-secondary)" }}
             >
               End page
             </label>
             <input
-              id={`merge-to-${item.id}`}
+              id={`${isOverlay ? "merge-overlay-to" : "merge-to"}-${item.id}`}
               type="number"
+              data-no-drag="true"
               min={1}
               max={item.totalPages}
               placeholder={`e.g. ${item.totalPages}`}

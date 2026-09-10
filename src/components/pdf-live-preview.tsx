@@ -1321,9 +1321,25 @@ function ImagePreviewPage({
 
 export function ImageLivePreview({
   items,
+  scrollToItemId,
+  scrollRequestKey = 0,
+  onItemSelect,
 }: {
   items: readonly ImagePreviewItem[];
+  scrollToItemId?: string;
+  scrollRequestKey?: number;
+  onItemSelect?: (itemId: string) => void;
 }) {
+  const pageRefs = useRef(new Map<string, HTMLButtonElement>());
+
+  useEffect(() => {
+    if (!scrollToItemId || scrollRequestKey === 0) return;
+    pageRefs.current.get(scrollToItemId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [scrollRequestKey, scrollToItemId]);
+
   return (
     <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--color-bg-subtle)]">
       <div className="flex h-11 shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 sm:h-12 sm:px-4">
@@ -1345,11 +1361,18 @@ export function ImageLivePreview({
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4 sm:py-5 md:py-7 scrollbar-thin">
         <div className="space-y-4 sm:space-y-5 md:space-y-7">
           {items.map((item, outputIndex) => (
-            <ImagePreviewPage
+            <button
               key={item.id}
-              item={item}
-              outputIndex={outputIndex}
-            />
+              type="button"
+              ref={(element) => {
+                if (element) pageRefs.current.set(item.id, element);
+                else pageRefs.current.delete(item.id);
+              }}
+              onClick={() => onItemSelect?.(item.id)}
+              className="block w-full cursor-pointer border-0 bg-transparent p-0 text-left outline-none"
+            >
+              <ImagePreviewPage item={item} outputIndex={outputIndex} />
+            </button>
           ))}
         </div>
       </div>
